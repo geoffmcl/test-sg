@@ -173,11 +173,13 @@ void parseCache2(const char *localPath)
   std::vector<std::string>::iterator it = cache.begin();
   for ( ; it != cache.end(); it++) {
     if (lineState == LINESTATE_HREF) {
-      strcpy(href, (*it).c_str());
+      strcpy(href, it->c_str());
+      href[it->size()] = '\0';
       lineState = LINESTATE_VERSIONNAME;
     } else {
       assert(lineState == LINESTATE_VERSIONNAME);
-      strcpy(versionName, (*it).c_str());
+      strcpy(versionName, it->c_str());
+      href[it->size()] = '\0';
       lineState = LINESTATE_HREF;
       char* hrefPtr = href;
 
