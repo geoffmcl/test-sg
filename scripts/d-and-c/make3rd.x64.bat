@@ -19,8 +19,13 @@
 @set UZ_OPT=x
 @set MOV_CMD=move
 @set MOV_OPT=
-@set SET_BAT="%ProgramFiles(x86)%\Microsoft Visual Studio 12.0\VC\vcvarsall.bat"
-@set GENERATOR="Visual Studio 12 Win64"
+@REM Switch MSVC Version
+@set _MSVS=10
+@set _MSNUM=1600
+@REM set _MSVS=12
+@REM set _MSNUM=1800
+@set SET_BAT="%ProgramFiles(x86)%\Microsoft Visual Studio %MSVS%.0\VC\vcvarsall.bat"
+@set GENERATOR="Visual Studio %_MSVS% Win64"
 @set HAD_ERROR=0
 
 @set TMP3RD=3rdParty.x64
@@ -511,11 +516,11 @@ if NOT EXIST %TMP_SRC%\nul (
 )
 
 CD %TMP_SRC%
-ECHO Doing: 'nmake -f makefile.vc MSVC_VER=1800 GDAL_HOME=%WORKSPACE%/libgdal-source BINDIR=%WORKSPACE%\%TMP3RD%\bin LIBDIR=%WORKSPACE%\%TMP3RD%\lib INCDIR=%WORKSPACE%\%TMP3RD%\include WIN64=YES' %BLDLOG%
+ECHO Doing: 'nmake -f makefile.vc MSVC_VER=%_MSNUM% GDAL_HOME=%WORKSPACE%/libgdal-source BINDIR=%WORKSPACE%\%TMP3RD%\bin LIBDIR=%WORKSPACE%\%TMP3RD%\lib INCDIR=%WORKSPACE%\%TMP3RD%\include WIN64=YES' %BLDLOG%
 IF %HAVELOG% EQU 1 (
-ECHO Doing: 'nmake -f makefile.vc MSVC_VER=1800 GDAL_HOME=%WORKSPACE%/libgdal-source BINDIR=%WORKSPACE%\%TMP3RD%\bin LIBDIR=%WORKSPACE%\%TMP3RD%\lib INCDIR=%WORKSPACE%\%TMP3RD%\include WIN64=YES' to %LOGFIL%
+ECHO Doing: 'nmake -f makefile.vc MSVC_VER=%_MSNUM% GDAL_HOME=%WORKSPACE%/libgdal-source BINDIR=%WORKSPACE%\%TMP3RD%\bin LIBDIR=%WORKSPACE%\%TMP3RD%\lib INCDIR=%WORKSPACE%\%TMP3RD%\include WIN64=YES' to %LOGFIL%
 )
-nmake -f makefile.vc MSVC_VER=1800 GDAL_HOME=%WORKSPACE%/libgdal-source BINDIR=%WORKSPACE%\%TMP3RD%\bin LIBDIR=%WORKSPACE%\%TMP3RD%\lib INCDIR=%WORKSPACE%\%TMP3RD%\include WIN64=YES %BLDLOG%
+nmake -f makefile.vc MSVC_VER=%_MSNUM% GDAL_HOME=%WORKSPACE%/libgdal-source BINDIR=%WORKSPACE%\%TMP3RD%\bin LIBDIR=%WORKSPACE%\%TMP3RD%\lib INCDIR=%WORKSPACE%\%TMP3RD%\include WIN64=YES %BLDLOG%
 @if ERRORLEVEL 1 (
 @set /A HAD_ERROR+=1
 @echo %HAD_ERROR%: Error exit nmake building source %TMP_SRC% in %CD%
@@ -1018,11 +1023,11 @@ md %TMP_BLD%
 )
 
 cd %TMP_BLD%
-@echo Doing: 'cmake ..\%TMP_SRC% -G %GENERATOR% -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\libgeos-build\build" -DNOMINMAX:BOOL=ON' %BLDLOG%
+@echo Doing: 'cmake ..\%TMP_SRC% -G %GENERATOR% -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\libgeos-build\build"' %BLDLOG%
 IF %HAVELOG% EQU 1 (
-@echo Doing: 'cmake ..\%TMP_SRC% -G %GENERATOR% -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\libgeos-build\build" -DNOMINMAX:BOOL=ON' to %LOGFIL%
+@echo Doing: 'cmake ..\%TMP_SRC% -G %GENERATOR% -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\libgeos-build\build"' to %LOGFIL%
 )
-cmake ..\%TMP_SRC% -G %GENERATOR% -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\libgeos-build\build" -DNOMINMAX:BOOL=ON %BLDLOG%
+cmake ..\%TMP_SRC% -G %GENERATOR% -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\libgeos-build\build" %BLDLOG%
 @if ERRORLEVEL 1 (
 @set /A HAD_ERROR+=1
 @echo %HAD_ERROR%: Error exit cmake conf/gen %TMP_SRC%
@@ -1171,11 +1176,11 @@ md %TMP_BLD%
 
 CD %TMP_BLD%
 
-ECHO Doing: 'cmake ..\%TMP_SRC% -G "Visual Studio 10 Win64" -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\plib-build\build" %BLDLOG%
+ECHO Doing: 'cmake ..\%TMP_SRC% -G %GENERATOR% -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\plib-build\build" %BLDLOG%
 IF %HAVELOG% EQU 1 (
-ECHO Doing: 'cmake ..\%TMP_SRC% -G "Visual Studio 10 Win64" -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\plib-build\build"
+ECHO Doing: 'cmake ..\%TMP_SRC% -G %GENERATOR% -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\plib-build\build"
 )
-cmake ..\%TMP_SRC% -G "Visual Studio 10 Win64" -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\plib-build\build" %BLDLOG%
+cmake ..\%TMP_SRC% -G %GENERATOR% -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\plib-build\build" %BLDLOG%
 @if ERRORLEVEL 1 (
 @set /A HAD_ERROR+=1
 @echo %HAD_ERROR%: Error exit config/gen %TMP_SRC%
