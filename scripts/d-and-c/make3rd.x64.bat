@@ -5,6 +5,7 @@
 @REM ################################################################################
 @REM started with from : http://wiki.flightgear.org/Howto:Build_3rdParty_library_for_Windows
 @REM ################################################################################
+@REM 20160511 - v1.0.4 - Add PLIB build, and install, through special PLIB-1.8.5.zip with a CMakeLists.txt
 @REM 20160510 - v1.0.3 - Add OpenAL build, and install, through openal-build.bat
 @REM 20160509 - v1.0.2 - Massive updates build3rd.x64.bat, including doing Boost
 @REM Renamed build3rd.x64.bat - v1.0.1 - 20140811
@@ -1128,13 +1129,94 @@ xcopy %WORKSPACE%\libexpat-build\build\include\* %WORKSPACE%\%TMP3RD%\include /s
 :DN_EXPAT
 cd %WORKSPACE%
 
-@REM external builds
-@if EXIST openal-build.bat (
-call openal-build.bat
+:DO_PLIB
+@set _TMP_LIBS=%_TMP_LIBS% PLIB
+@call :SET_BOOST
+@echo %0: ############################# Download ^& compile PLIB %BLDLOG%
+IF %HAVELOG% EQU 1 (
+@echo %0: ############################# Download ^& compile PLIB to %LOGFIL%
+)
+
+@set TMP_DIR=PLIB-1.8.5
+@set TMP_ZIP=%TMP_DIR%.zip
+@set TMP_URL=http://geoffair.org/tmp/%TMP_ZIP%
+@set TMP_SRC=plib-source
+@set TMP_BLD=plib-build
+
+@if NOT EXIST %TMP_ZIP% (
+CALL %GET_EXE% %TMP_URL% %GET_OPT% %TMP_ZIP%
+)
+
+@if NOT EXIST %TMP_SRC%\nul (
+@if NOT EXIST %TMP_DIR%\nul (
+CALL %UZ_EXE% %UZ_OPT% %TMP_ZIP%
+)
+@REM Seems NEED a delay after the UNZIP, else get access denied on the renaming???
+CALL :SLEEP1
+REN %TMP_DIR% %TMP_SRC%
+)
+
+@if NOT EXIST %TMP_SRC%\nul (
+@set /A HAD_ERROR+=1
+@echo %HAD_ERROR%: Failed to set up %TMP_SRC%
+@echo %HAD_ERROR%: Failed to set up %TMP_SRC% >> %ERRLOG%
+@goto DN_PLIB
+)
+
+cd %WORKSPACE%
+
+@if NOT EXIST %TMP_BLD%\nul (
+md %TMP_BLD%
+)
+
+CD %TMP_BLD%
+
+ECHO Doing: 'cmake ..\%TMP_SRC% -G "Visual Studio 10 Win64" -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\plib-build\build" %BLDLOG%
+IF %HAVELOG% EQU 1 (
+ECHO Doing: 'cmake ..\%TMP_SRC% -G "Visual Studio 10 Win64" -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\plib-build\build"
+)
+cmake ..\%TMP_SRC% -G "Visual Studio 10 Win64" -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\plib-build\build" %BLDLOG%
 @if ERRORLEVEL 1 (
 @set /A HAD_ERROR+=1
-@set _TMP_BLD_FAIL=%_TMP_BLD_FAIL% OpenAL
+@echo %HAD_ERROR%: Error exit config/gen %TMP_SRC%
+@echo %HAD_ERROR%: Error exit config/gen %TMP_SRC% >> %ERRLOG%
 )
+
+ECHO Doing 'cmake --build . --config Debug --target INSTALL' %BLDLOG%
+IF %HAVELOG% EQU 1 (
+ECHO Doing 'cmake --build . --config Debug --target INSTALL'
+)
+cmake --build . --config Debug --target INSTALL %BLDLOG%
+@if ERRORLEVEL 1 (
+@set /A HAD_ERROR+=1
+@echo %HAD_ERROR%: Error exit debug building source %TMP_SRC%
+@echo %HAD_ERROR%: Error exit debug building source %TMP_SRC% >> %ERRLOG%
+)
+
+ECHO Doing 'cmake --build . --config Release --target INSTALL' %BLDLOG%
+IF %HAVELOG% EQU 1 (
+ECHO Doing 'cmake --build . --config Release --target INSTALL'
+)
+cmake --build . --config Release --target INSTALL %BLDLOG%
+@if ERRORLEVEL 1 (
+@set /A HAD_ERROR+=1
+@echo %HAD_ERROR%: Error exit building source %TMP_SRC%
+@echo %HAD_ERROR%: Error exit building source %TMP_SRC% >> %ERRLOG%
+)
+
+xcopy %WORKSPACE%\plib-build\build\include\* %WORKSPACE%\%TMP3RD%\include /y /s /q
+xcopy %WORKSPACE%\plib-build\build\lib\*.lib %WORKSPACE%\%TMP3RD%\lib /y /q
+@REM xcopy %WORKSPACE%\plib-build\build\bin\zlib.dll %WORKSPACE%\%TMP3RD%\bin /y /q
+
+:DN_PLIB
+
+@REM external builds
+@REM if EXIST openal-build.bat (
+@REM call openal-build.bat
+@REM @if ERRORLEVEL 1 (
+@REM @set /A HAD_ERROR+=1
+@REM @set _TMP_BLD_FAIL=%_TMP_BLD_FAIL% OpenAL
+@REM )
 
 :END
 cd %WORKSPACE%
