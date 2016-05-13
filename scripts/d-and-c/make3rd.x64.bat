@@ -11,6 +11,7 @@
 @REM Renamed build3rd.x64.bat - v1.0.1 - 20140811
 @REM ################################################################################
 @set "WORKSPACE=%CD%"
+@if EXIST ..\..\.git\nul goto NOT_IN_SRC
 @set TMPDN3RD=make3rd.x64.txt
 
 @set GET_EXE=wget
@@ -20,12 +21,12 @@
 @set MOV_CMD=move
 @set MOV_OPT=
 @REM Switch MSVC Version
-@REM set _MSVS=10
-@REM set _MSNUM=1600
-@set _MSVS=12
-@set _MSNUM=1800
+@set _MSVS=10
+@set _MSNUM=1600
+@REM set _MSVS=12
+@REM set _MSNUM=1800
 @set SET_BAT="%ProgramFiles(x86)%\Microsoft Visual Studio %_MSVS%.0\VC\vcvarsall.bat"
-@set GENERATOR="Visual Studio %_MSVS% Win64"
+@set GENERATOR=Visual Studio %_MSVS% Win64
 @set HAD_ERROR=0
 
 @set TMP3RD=3rdParty.x64
@@ -153,11 +154,11 @@ md %TMP_BLD%
 
 CD %TMP_BLD%
 
-ECHO Doing: 'cmake ..\%TMP_SRC% -G %GENERATOR% -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\zlib-build\build" %BLDLOG%
+ECHO Doing: 'cmake ..\%TMP_SRC% -G "%GENERATOR%" -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\zlib-build\build" %BLDLOG%
 IF %HAVELOG% EQU 1 (
-ECHO Doing: 'cmake ..\%TMP_SRC% -G %GENERATOR% -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\zlib-build\build"
+ECHO Doing: 'cmake ..\%TMP_SRC% -G "%GENERATOR%" -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\zlib-build\build"
 )
-cmake ..\%TMP_SRC% -G %GENERATOR% -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\zlib-build\build" %BLDLOG%
+cmake ..\%TMP_SRC% -G "%GENERATOR%" -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\zlib-build\build" %BLDLOG%
 @if ERRORLEVEL 1 (
 @set /A HAD_ERROR+=1
 @echo %HAD_ERROR%: Error exit config/gen %TMP_SRC%
@@ -276,12 +277,12 @@ MD %TMP_BLD%
 )
 
 CD %TMP_BLD%
-ECHO Doing 'cmake ..\%TMP_SRC% -G %GENERATOR% -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\libpng-build\build" -DCMAKE_PREFIX_PATH:PATH="%WORKSPACE%\%TMP3RD%"' %BLDLOG%
+ECHO Doing 'cmake ..\%TMP_SRC% -G "%GENERATOR%" -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\libpng-build\build" -DCMAKE_PREFIX_PATH:PATH="%WORKSPACE%\%TMP3RD%"' %BLDLOG%
 IF %HAVELOG% EQU 1 (
-ECHO Doing 'cmake ..\%TMP_SRC% -G %GENERATOR% -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\libpng-build\build" -DCMAKE_PREFIX_PATH:PATH="%WORKSPACE%\%TMP3RD%"' to %LOGFIL%
+ECHO Doing 'cmake ..\%TMP_SRC% -G "%GENERATOR%" -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\libpng-build\build" -DCMAKE_PREFIX_PATH:PATH="%WORKSPACE%\%TMP3RD%"' to %LOGFIL%
 )
 
-cmake ..\%TMP_SRC% -G %GENERATOR% -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\libpng-build\build" -DCMAKE_PREFIX_PATH:PATH="%WORKSPACE%\%TMP3RD%"
+cmake ..\%TMP_SRC% -G "%GENERATOR%" -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\libpng-build\build" -DCMAKE_PREFIX_PATH:PATH="%WORKSPACE%\%TMP3RD%"
 @if ERRORLEVEL 1 (
 @set /A HAD_ERROR+=1
 @echo %HAD_ERROR%: Error exit cmake config/gen %TMP_SRC%
@@ -452,11 +453,11 @@ MD %TMP_BLD%
 )
 
 CD %TMP_BLD%
-ECHO Doing: 'cmake ..\%TMP_SRC% -G %GENERATOR% -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\libcurl-build\build" -DCMAKE_PREFIX_PATH:PATH="%WORKSPACE%\%TMP3RD%"' %BLDLOG%
+ECHO Doing: 'cmake ..\%TMP_SRC% -G "%GENERATOR%" -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\libcurl-build\build" -DCMAKE_PREFIX_PATH:PATH="%WORKSPACE%\%TMP3RD%"' %BLDLOG%
 IF %HAVELOG% EQU 1 (
-ECHO Doing: 'cmake ..\%TMP_SRC% -G %GENERATOR% -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\libcurl-build\build" -DCMAKE_PREFIX_PATH:PATH="%WORKSPACE%\%TMP3RD%"' to %LOGFIL%
+ECHO Doing: 'cmake ..\%TMP_SRC% -G "%GENERATOR%" -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\libcurl-build\build" -DCMAKE_PREFIX_PATH:PATH="%WORKSPACE%\%TMP3RD%"' to %LOGFIL%
 )
-cmake ..\%TMP_SRC% -G %GENERATOR% -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\libcurl-build\build" -DCMAKE_PREFIX_PATH:PATH="%WORKSPACE%\%TMP3RD%" %BLDLOG%
+cmake ..\%TMP_SRC% -G "%GENERATOR%" -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\libcurl-build\build" -DCMAKE_PREFIX_PATH:PATH="%WORKSPACE%\%TMP3RD%" %BLDLOG%
 @if ERRORLEVEL 1 (
 @set /A HAD_ERROR+=1
 @echo %HAD_ERROR%: Error exit cmake conf/gen %TMP_SRC%
@@ -597,11 +598,11 @@ md %TMP_BLD%
 )
 
 cd %TMP_BLD%
-ECHO Doing: 'cmake ..\%TMP_SRC% -G %GENERATOR% -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\libfltk-build\build" -DCMAKE_PREFIX_PATH:PATH="%WORKSPACE%\%TMP3RD%"' %BLDLOG%
+ECHO Doing: 'cmake ..\%TMP_SRC% -G "%GENERATOR%" -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\libfltk-build\build" -DCMAKE_PREFIX_PATH:PATH="%WORKSPACE%\%TMP3RD%"' %BLDLOG%
 IF %HAVELOG% EQU 1 (
-ECHO Doing: 'cmake ..\%TMP_SRC% -G %GENERATOR% -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\libfltk-build\build" -DCMAKE_PREFIX_PATH:PATH="%WORKSPACE%\%TMP3RD%"' to %LOGFIL%
+ECHO Doing: 'cmake ..\%TMP_SRC% -G "%GENERATOR%" -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\libfltk-build\build" -DCMAKE_PREFIX_PATH:PATH="%WORKSPACE%\%TMP3RD%"' to %LOGFIL%
 )
-cmake ..\%TMP_SRC% -G %GENERATOR% -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\libfltk-build\build" -DCMAKE_PREFIX_PATH:PATH="%WORKSPACE%\%TMP3RD%" %BLDLOG%
+cmake ..\%TMP_SRC% -G "%GENERATOR%" -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\libfltk-build\build" -DCMAKE_PREFIX_PATH:PATH="%WORKSPACE%\%TMP3RD%" %BLDLOG%
 @if ERRORLEVEL 1 (
 @set /A HAD_ERROR+=1
 @echo %HAD_ERROR%: Error exit cmake conf/gen %TMP_SRC%
@@ -786,7 +787,7 @@ CD %TMP_BLD%
 )
 
 @REM -DZLIB_LIBRARY="%WORKSPACE%\%TMP3RD%\lib\zlib.lib" -DZLIB_INCLUDE_DIR="%WORKSPACE%\%TMP3RD%\include" 
-@set TMP_OPS=-G %GENERATOR% -DCMAKE_PREFIX_PATH="%TMP_PRE%" -DCGAL_Boost_USE_STATIC_LIBS:BOOL=ON -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\libcgal-build\build"
+@set TMP_OPS=-G "%GENERATOR%" -DCMAKE_PREFIX_PATH="%TMP_PRE%" -DCGAL_Boost_USE_STATIC_LIBS:BOOL=ON -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\libcgal-build\build"
 
 @ECHO Doing: 'cmake ..\%TMP_SRC% %TMP_OPS% %BLDLOG%
 IF %HAVELOG% EQU 1 (
@@ -884,11 +885,11 @@ MD %TMP_BLD%
 )
 
 CD %TMP_BLD%
-ECHO Doing: 'cmake ..\%TMP_SRC% -G %GENERATOR% -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%/freetype-build/build" -DCMAKE_PREFIX_PATH:PATH="%WORKSPACE%/%TMP3RD%"' %BLDLOG%
+ECHO Doing: 'cmake ..\%TMP_SRC% -G "%GENERATOR%" -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%/freetype-build/build" -DCMAKE_PREFIX_PATH:PATH="%WORKSPACE%/%TMP3RD%"' %BLDLOG%
 IF %HAVELOG% EQU 1 (
-ECHO Doing: 'cmake ..\%TMP_SRC% -G %GENERATOR% -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%/freetype-build/build" -DCMAKE_PREFIX_PATH:PATH="%WORKSPACE%/%TMP3RD%"' to %LOGFIL%
+ECHO Doing: 'cmake ..\%TMP_SRC% -G "%GENERATOR%" -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%/freetype-build/build" -DCMAKE_PREFIX_PATH:PATH="%WORKSPACE%/%TMP3RD%"' to %LOGFIL%
 ) 
-cmake ..\%TMP_SRC% -G %GENERATOR% -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%/freetype-build/build" -DCMAKE_PREFIX_PATH:PATH="%WORKSPACE%/%TMP3RD%"
+cmake ..\%TMP_SRC% -G "%GENERATOR%" -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%/freetype-build/build" -DCMAKE_PREFIX_PATH:PATH="%WORKSPACE%/%TMP3RD%"
 @if ERRORLEVEL 1 (
 @set /A HAD_ERROR+=1
 @echo %HAD_ERROR%: Error exit cmake conf/gen %TMP_SRC%
@@ -1023,11 +1024,11 @@ md %TMP_BLD%
 )
 
 cd %TMP_BLD%
-@echo Doing: 'cmake ..\%TMP_SRC% -G %GENERATOR% -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\libgeos-build\build"' %BLDLOG%
+@echo Doing: 'cmake ..\%TMP_SRC% -G "%GENERATOR%" -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\libgeos-build\build"' %BLDLOG%
 IF %HAVELOG% EQU 1 (
-@echo Doing: 'cmake ..\%TMP_SRC% -G %GENERATOR% -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\libgeos-build\build"' to %LOGFIL%
+@echo Doing: 'cmake ..\%TMP_SRC% -G "%GENERATOR%" -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\libgeos-build\build"' to %LOGFIL%
 )
-cmake ..\%TMP_SRC% -G %GENERATOR% -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\libgeos-build\build" %BLDLOG%
+cmake ..\%TMP_SRC% -G "%GENERATOR%" -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\libgeos-build\build" %BLDLOG%
 @if ERRORLEVEL 1 (
 @set /A HAD_ERROR+=1
 @echo %HAD_ERROR%: Error exit cmake conf/gen %TMP_SRC%
@@ -1105,11 +1106,11 @@ md %TMP_BLD%
 )
 
 cd %TMP_BLD%
-@echo Doing: 'cmake ..\%TMP_SRC% -G %GENERATOR% -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\libexpat-build\build"' %BLDLOG%
+@echo Doing: 'cmake ..\%TMP_SRC% -G "%GENERATOR%" -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\libexpat-build\build"' %BLDLOG%
 IF %HAVELOG% EQU 1 (
-@echo Doing: 'cmake ..\%TMP_SRC% -G %GENERATOR% -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\libexpat-build\build"' to %LOGFIL%
+@echo Doing: 'cmake ..\%TMP_SRC% -G "%GENERATOR%" -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\libexpat-build\build"' to %LOGFIL%
 )
-cmake ..\%TMP_SRC% -G %GENERATOR% -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\libexpat-build\build" %BLDLOG%
+cmake ..\%TMP_SRC% -G "%GENERATOR%" -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\libexpat-build\build" %BLDLOG%
 @if ERRORLEVEL 1 (
 @set /A HAD_ERROR+=1
 @echo %HAD_ERROR%: Error exit cmake conf/gen %TMP_SRC%
@@ -1176,11 +1177,11 @@ md %TMP_BLD%
 
 CD %TMP_BLD%
 
-ECHO Doing: 'cmake ..\%TMP_SRC% -G %GENERATOR% -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\plib-build\build" %BLDLOG%
+ECHO Doing: 'cmake ..\%TMP_SRC% -G "%GENERATOR%" -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\plib-build\build" %BLDLOG%
 IF %HAVELOG% EQU 1 (
-ECHO Doing: 'cmake ..\%TMP_SRC% -G %GENERATOR% -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\plib-build\build"
+ECHO Doing: 'cmake ..\%TMP_SRC% -G "%GENERATOR%" -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\plib-build\build"
 )
-cmake ..\%TMP_SRC% -G %GENERATOR% -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\plib-build\build" %BLDLOG%
+cmake ..\%TMP_SRC% -G "%GENERATOR%" -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\plib-build\build" %BLDLOG%
 @if ERRORLEVEL 1 (
 @set /A HAD_ERROR+=1
 @echo %HAD_ERROR%: Error exit config/gen %TMP_SRC%
@@ -1292,6 +1293,11 @@ IF %HAVELOG% EQU 1 (
 @echo Error: from MD %TMP_BLD%!!!
 @goto ISERR
 
+:NOT_IN_SRC
+@set /A HAD_ERROR+=1
+@echo.
+@echo Error: Do NOT do a build in the repo source! %CD%
+@goto ISERR
 
 :ISERR
 @REM echo.
