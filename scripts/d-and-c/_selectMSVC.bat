@@ -1,14 +1,28 @@
 @setlocal
 @set TMPERR=0
 @REM Switch MSVC Version
-@set _MSVS=10
-@set _MSNUM=1600
-@REM set _MSVS=12
-@REM set _MSNUM=1800
+@REM set _MSVS=10
+@REM set _MSNUM=1600
+@set _MSVS=12
+@set _MSNUM=1800
 @set VS_PATH=%ProgramFiles(x86)%\Microsoft Visual Studio %_MSVS%.0
 @set "VS_BAT=%VS_PATH%\VC\vcvarsall.bat"
-@set BUILD_BITS=%PROCESSOR_ARCHITECTURE%
+@REM set BUILD_BITS=%PROCESSOR_ARCHITECTURE%
 @set GENERATOR=Visual Studio %_MSVS% Win64
+
+@REM ######################################################################
+@REM ######### Check to see if we have x86 or x64 native compiler #########
+@REM ######### Once we know, call vcvarsall.bat accordingly ###############
+@REM ######################################################################
+@for /f "tokens=9" %%G in ('"%ProgramFiles(x86)%\Microsoft Visual Studio 12.0\VC\bin\cl.exe" 2^>^&1 ') do (
+    @set "TRUE="
+    @if "%%G"=="x86" (
+        @set BUILD_BITS=x86_amd64
+    )
+    @if "%%G"=="x64" (
+        @set BUILD_BITS=amd64
+    )
+) 
 
 @REM ######################### CHECK AVAILABLE TOOLS ######################################
 @IF EXIST "%VS_PATH%" goto GOT_VS_PATH
@@ -16,7 +30,7 @@
 @set _MSNUM=1800
 @set VS_PATH=%ProgramFiles(x86)%\Microsoft Visual Studio %_MSVS%.0
 @set "VS_BAT=%VS_PATH%\VC\vcvarsall.bat"
-@set BUILD_BITS=%PROCESSOR_ARCHITECTURE%
+@REM set BUILD_BITS=%PROCESSOR_ARCHITECTURE%
 @set GENERATOR=Visual Studio %_MSVS% Win64
 @IF EXIST "%VS_PATH%" goto GOT_VS_PATH
 @goto NO_VS_PATH
