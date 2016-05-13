@@ -20,11 +20,11 @@
 @set MOV_CMD=move
 @set MOV_OPT=
 @REM Switch MSVC Version
-@set _MSVS=10
-@set _MSNUM=1600
-@REM set _MSVS=12
-@REM set _MSNUM=1800
-@set SET_BAT="%ProgramFiles(x86)%\Microsoft Visual Studio %MSVS%.0\VC\vcvarsall.bat"
+@REM set _MSVS=10
+@REM set _MSNUM=1600
+@set _MSVS=12
+@set _MSNUM=1800
+@set SET_BAT="%ProgramFiles(x86)%\Microsoft Visual Studio %_MSVS%.0\VC\vcvarsall.bat"
 @set GENERATOR="Visual Studio %_MSVS% Win64"
 @set HAD_ERROR=0
 
@@ -375,8 +375,8 @@ REN %TMP_DIR% %TMP_SRC%
 CD %TMP_SRC%
 
 @IF NOT EXIST jconfig.h (
-@echo Doing 'nmake -f makefile.vc setup-v12'
-nmake -f makefile.vc setup-v10
+@echo Doing 'nmake -f makefile.vc setup-v%_MSVS%'
+nmake -f makefile.vc setup-v%_MSVS%
 @if ERRORLEVEL 1 (
 @set /A HAD_ERROR+=1
 @echo %HAD_ERROR%: Error exit makefile.vc %TMP_SRC%
