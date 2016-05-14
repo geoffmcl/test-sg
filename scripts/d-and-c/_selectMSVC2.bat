@@ -24,45 +24,52 @@
 :GOT_VS_PATH
 @IF NOT exist "%VS_BAT%" goto NO_VS_BAT
 
-@echo %BUILD_BITS%
 @REM ####################### SET 32/64 BITS ARCHITECTURE ##################################
 @REM ######## Check for 64 bit OS
-@for /f "tokens=1,2 delims=-" %%G in ('wmic os get osarchitecture') do @if "%%G"=="64" (
-    @REM ######### We are running a 64 bit OSARCHITECTURE, now check for native 64 compiler
-    @REM ######### Covers IA64 and AMD64
-    @IF EXIST "%VS_PATH%\bin\%BUILD_BITS%" (
+@if "%BUILD_BITS%"=="x86" (
+    @if "%PROCESSOR_ARCHITEW6432%"=="" (
+        @echo '32 bit OS, not just a 32 bit process running in SYSWOW64, exit
+        @set "RDPARTY_ARCH=win32"
+        @set "RDPARTY_DIR=3rdParty"
+        @set "MSVCBIN=%VS_PATH%\VC\bin\vcvars32.bat"
+        @echo.
+        @echo BUILD neither x86_amd64 nor amd64. IE no 64-bit build!
+        @echo *** FIX ME *** if some other BUILD_BITS=%BUILD_BITS% is correct...
+        @echo and just comment out this exit
+        @set TMPERR=1
+        @goto end
+    ) else (
+        @set BUILD_BITS=%PROCESSOR_ARCHITEW6432%
+        @echo '%BUILD_BITS% running 32 bit process only'
+    )
+) 
+
+@REM ######### We are running a 64 bit OS /SO/ we must have 64 bit hardware, now check for native 64 compiler
+@REM ######### Covers IA64 and AMD64
+@echo 'Do we have a native compiler 64 bit compiler?'
+@IF EXIST "%VS_PATH%\VC\bin\%BUILD_BITS%" (
         @set "RDPARTY_ARCH=x64"
         @set "RDPARTY_DIR=3rdParty.x64"
         @set "MSVCBIN=%VS_PATH%\VC\bin\%BUILD_BITS%\vcvars%BUILD_BITS%.bat"
         @set "COMPILER=%BUILD_BITS%"
+        @echo 'YES, Native 64 bit compiler!'
+        @echo.
         ) ELSE (
-        @REM ####### Assume we want to use 32bit compiler under WOW64(x86_amd64, NO native compiler? -CHECK- / 64 bit OS? -CHECK-
-        @IF EXIST "%VS_PATH%\VC\bin\x86_\vcvarsx86_amd64.bat" (       
-            @set "RDPARTY_ARCH=x64"
-            @set "RDPARTY_DIR=3rdParty.x64"
-            @set "MSVCBIN=%VS_PATH%\VC\bin\%BUILD_BITS%\vcvars64.bat"
-            @set "COMPILER=x86_amd64"
-            ) ELSE (
-                @set "RDPARTY_ARCH=win32"
-                @set "RDPARTY_DIR=3rdParty"
-                @set "MSVCBIN=%VS_PATH%\VC\bin\vcvars32.bat"
+            @REM ####### Assume we want to use 32bit compiler under SYSWOW64(x86_amd64, NO native compiler? -CHECK- / 64 bit OS? -CHECK-
+            @IF EXIST "%VS_PATH%\VC\bin\x86_%BUILD_BITS%\vcvarsx86_amd64.bat" (       
+                @set "RDPARTY_ARCH=x64"
+                @set "RDPARTY_DIR=3rdParty.x64"
+                @set "MSVCBIN=%VS_PATH%\VC\bin\x86_%BUILD_BITS%\vcvarsx86_%BUILD_BITS%.bat"
+                @set "COMPILER=x86_amd64"
+                @echo 'NO, it appears you are using a 32 bit compiler running under SYSWOW64!'
                 @echo.
-                @echo BUILD neither x86_amd64 nor amd64. IE no 64-bit build!
-                @echo *** FIX ME *** if some other BUILD_BITS=%BUILD_BITS% is correct...
-                @echo and just comment out this exit
-                @set TMPERR=1
-                @goto END
             )
         )
-    )
+    )   
 )
 
-@REM what is in bin? x86_amd64 and/or amd64
+@REM validate %MSVCBIN% and finally call vcvarsall.bat
 @echo 1: Checking for "%MSVCBIN%" ...
-@if EXIST "%MSVCBIN%" goto GOT_BIN
-@echo Warning: Can NOT locate "%MSVCBIN%
-@set "MSVCBIN=%VS_PATH%\VC\bin\x86_%BUILD_BITS%\vcvarsx86_amd64.bat"
-@echo 2: Checking for "%MSVCBIN%" ...
 @if EXIST "%MSVCBIN%" goto GOT_BIN
 @REM oops found nothing... what to do???
 @echo.
