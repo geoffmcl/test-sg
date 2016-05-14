@@ -1,28 +1,14 @@
 @setlocal
 @set TMPERR=0
 @REM Switch MSVC Version
-@REM set _MSVS=10
-@REM set _MSNUM=1600
-@set _MSVS=12
-@set _MSNUM=1800
+@set _MSVS=10
+@set _MSNUM=1600
+@REM set _MSVS=12
+@REM set _MSNUM=1800
 @set VS_PATH=%ProgramFiles(x86)%\Microsoft Visual Studio %_MSVS%.0
 @set "VS_BAT=%VS_PATH%\VC\vcvarsall.bat"
-@REM set BUILD_BITS=%PROCESSOR_ARCHITECTURE%
+@set BUILD_BITS=%PROCESSOR_ARCHITECTURE%
 @set GENERATOR=Visual Studio %_MSVS% Win64
-
-@REM ######################################################################
-@REM ######### Check to see if we have x86 or x64 native compiler #########
-@REM ######### Once we know, call vcvarsall.bat accordingly ###############
-@REM ######################################################################
-@for /f "tokens=9" %%G in ('"%ProgramFiles(x86)%\Microsoft Visual Studio 12.0\VC\bin\cl.exe" 2^>^&1 ') do (
-    @set "TRUE="
-    @if "%%G"=="x86" (
-        @set BUILD_BITS=x86_amd64
-    )
-    @if "%%G"=="x64" (
-        @set BUILD_BITS=amd64
-    )
-) 
 
 @REM ######################### CHECK AVAILABLE TOOLS ######################################
 @IF EXIST "%VS_PATH%" goto GOT_VS_PATH
@@ -30,7 +16,7 @@
 @set _MSNUM=1800
 @set VS_PATH=%ProgramFiles(x86)%\Microsoft Visual Studio %_MSVS%.0
 @set "VS_BAT=%VS_PATH%\VC\vcvarsall.bat"
-@REM set BUILD_BITS=%PROCESSOR_ARCHITECTURE%
+@set BUILD_BITS=%PROCESSOR_ARCHITECTURE%
 @set GENERATOR=Visual Studio %_MSVS% Win64
 @IF EXIST "%VS_PATH%" goto GOT_VS_PATH
 @goto NO_VS_PATH
@@ -38,27 +24,36 @@
 :GOT_VS_PATH
 @IF NOT exist "%VS_BAT%" goto NO_VS_BAT
 
-@echo Set ARCHITEXTURE, based on PROCESSOR_ARCHITECTURE=%BUILD_BITS%
+@echo Set ARCHITECTURE, based on PROCESSOR_ARCHITECTURE=%BUILD_BITS%
 @REM ####################### SET 32/64 BITS ARCHITECTURE ##################################
-@IF /i %BUILD_BITS% EQU x86_amd64 (
-    @set "RDPARTY_ARCH=x64"
-    @set "RDPARTY_DIR=3rdParty.x64"
-    @set "MSVCBIN=%VS_PATH%\VC\bin\%BUILD_BITS%\vcvarsx86_amd64.bat"
-) ELSE (
-    @IF /i %BUILD_BITS% EQU amd64 (
+@REM ######## Check for 64 bit OS
+@for /f "tokens=1,2 delims=-" %%G in ('wmic os get osarchitecture') do @if "%%G"=="64" (
+    @REM ######### We are running a 64 bit OSARCHITECTURE, now check for native 64 compiler
+    @IF EXIST "%VS_PATH%\bin\%BUILD_BITS%" (
         @set "RDPARTY_ARCH=x64"
         @set "RDPARTY_DIR=3rdParty.x64"
-        @set "MSVCBIN=%VS_PATH%\VC\bin\%BUILD_BITS%\vcvars64.bat"
+        @set "MSVCBIN=%VS_PATH%\VC\bin\%BUILD_BITS%\vcvarsamd64.bat"
+        @set "COMPILER=AMD64"
     ) ELSE (
-        @set "RDPARTY_ARCH=win32"
-        @set "RDPARTY_DIR=3rdParty"
-        @set "MSVCBIN=%VS_PATH%\VC\bin\vcvars32.bat"
-        @echo.
-        @echo BUILD neither x86_amd64 nor amd64. IE no 64-bit build!
-        @echo *** FIX ME *** if some other BUILD_BITS=%BUILD_BITS% is correct...
-        @echo and just comment out this exit
-        @set TMPERR=1
-        @goto END
+        @REM ####### Assume we want to use 32bit compiler under WOW64
+        @REM ####### Redudant check, by prepending x86_ to BUILD_BITS we make sure we are running 64 bit process
+        @IF EXIST "%VS_PATH%\VC\bin\x86_%BUILD_BITS%\vcvarsx86_amd64.bat" (       
+            @set "RDPARTY_ARCH=x64"
+            @set "RDPARTY_DIR=3rdParty.x64"
+            @set "MSVCBIN=%VS_PATH%\VC\bin\%BUILD_BITS%\vcvars64.bat"
+            @set "COMPILER=x86_amd64"
+            ) ELSE (
+                @set "RDPARTY_ARCH=win32"
+                @set "RDPARTY_DIR=3rdParty"
+                @set "MSVCBIN=%VS_PATH%\VC\bin\vcvars32.bat"
+                @echo.
+                @echo BUILD neither x86_amd64 nor amd64. IE no 64-bit build!
+                @echo *** FIX ME *** if some other BUILD_BITS=%BUILD_BITS% is correct...
+                @echo and just comment out this exit
+                @set TMPERR=1
+                @goto END
+            )
+        )
     )
 )
 
@@ -66,7 +61,7 @@
 @echo 1: Checking for "%MSVCBIN%" ...
 @if EXIST "%MSVCBIN%" goto GOT_BIN
 @echo Warning: Can NOT locate "%MSVCBIN%
-@set "MSVCBIN=%VS_PATH%\VC\bin\%BUILD_BITS%\vcvarsx86_amd64.bat"
+@set "MSVCBIN=%VS_PATH%\VC\bin\x86_%BUILD_BITS%\vcvarsx86_amd64.bat"
 @echo 2: Checking for "%MSVCBIN%" ...
 @if EXIST "%MSVCBIN%" goto GOT_BIN
 @REM oops found nothing... what to do???
@@ -75,11 +70,9 @@
 @echo *** FIX ME *** if some other BUILD_BITS=%BUILD_BITS% is correct...
 @set TMPERR=1
 @goto END
-
 :GOT_BIN
-
-@echo Will: CALL "%VS_BAT%" %BUILD_BITS%
-@call "%VS_BAT%" %BUILD_BITS%
+@echo Will: CALL "%VS_BAT%" %COMPILER%
+@call "%VS_BAT%" %COMPILER%
 @if ERRORLEVEL 1 goto BAT_FAILED
 @echo Have set the MSVC environment...
 @call nmake /? >nul
@@ -97,21 +90,17 @@
 @echo Lib paths for LINKING
 @echo Have LIB=%LIB%
 :DN_LIB
-
 @goto END
-
 :BAT_FAILED
 @echo.
 @echo Oops the setup BAT "%VS_BAT%" FAILED!
 @set TMPERR=1
 @goto END
-
 :NAMKE_FAILED
 @echo.
 @echo Oops NMAKE /? FAILED!
 @set TMPERR=1
 @goto END
-
 :NO_VS_PATH
 	@echo.
     @echo ERROR: "%VS_PATH%" doesn't exist
@@ -119,7 +108,6 @@
 	@set TMPERR=1
 	@echo.
 @goto END
-
 :NO_VS_BAT
 	@echo.
     @echo ERROR: %VS_BAT% doesn't exist
@@ -127,10 +115,7 @@
 	@set TMPERR=1
 	@echo.
 @goto END
-
-
 :END
 @endlocal
 @exit /b %TMPERR%
-
 @REM eof
