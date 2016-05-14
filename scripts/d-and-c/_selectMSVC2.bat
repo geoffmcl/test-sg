@@ -27,6 +27,8 @@
 @REM ####################### SET 32/64 BITS ARCHITECTURE ##################################
 @REM ######## Check for 64 bit OS
 @if "%BUILD_BITS%"=="x86" (
+    @REM ######## Check to see that isn't just a 32 bit process running on 64 bit OS. 
+    @REM ######## 32 bit apps /FOOL/ %PROCESSOR_ARCHITECTURE%, check to see if %PROCESSOR_ARCHITEW6432% is set?
     @if "%PROCESSOR_ARCHITEW6432%"=="" (
         @echo '32 bit OS, not just a 32 bit process running in SYSWOW64, exit
         @set "RDPARTY_ARCH=win32"
