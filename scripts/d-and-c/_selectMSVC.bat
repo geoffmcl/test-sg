@@ -29,15 +29,15 @@
 @REM ######## Check for 64 bit OS
 @for /f "tokens=1,2 delims=-" %%G in ('wmic os get osarchitecture') do @if "%%G"=="64" (
     @REM ######### We are running a 64 bit OSARCHITECTURE, now check for native 64 compiler
+    @REM ######### Covers IA64 and AMD64
     @IF EXIST "%VS_PATH%\bin\%BUILD_BITS%" (
         @set "RDPARTY_ARCH=x64"
         @set "RDPARTY_DIR=3rdParty.x64"
-        @set "MSVCBIN=%VS_PATH%\VC\bin\%BUILD_BITS%\vcvarsamd64.bat"
-        @set "COMPILER=AMD64"
-    ) ELSE (
-        @REM ####### Assume we want to use 32bit compiler under WOW64
-        @REM ####### Redudant check, by prepending x86_ to BUILD_BITS we make sure we are running 64 bit process
-        @IF EXIST "%VS_PATH%\VC\bin\x86_%BUILD_BITS%\vcvarsx86_amd64.bat" (       
+        @set "MSVCBIN=%VS_PATH%\VC\bin\%BUILD_BITS%\vcvars%BUILD_BITS%.bat"
+        @set "COMPILER=%BUILD_BITS%"
+        ) ELSE (
+        @REM ####### Assume we want to use 32bit compiler under WOW64(x86_amd64, NO native compiler? -CHECK- 64 bit OS -CHECK-
+        @IF EXIST "%VS_PATH%\VC\bin\x86_\vcvarsx86_amd64.bat" (       
             @set "RDPARTY_ARCH=x64"
             @set "RDPARTY_DIR=3rdParty.x64"
             @set "MSVCBIN=%VS_PATH%\VC\bin\%BUILD_BITS%\vcvars64.bat"
