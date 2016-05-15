@@ -36,7 +36,7 @@
 @REM Uncomment this, and add to config/build line, if you can output to a LOG
 @set BLDLOG= ^>^> %LOGFIL% 2^>^&1
 @set ERRLOG=%WORKSPACE%\error-2.txt
-@set ADD_GDAL=0
+@set ADD_GDAL=1
 @set HAVELOG=1
 
 @if EXIST %TMPDN3RD% (
@@ -105,7 +105,7 @@ md %WORKSPACE%\%TMP3RD%\lib
 md %WORKSPACE%\%TMP3RD%\include
 )
 
-CALL %SET_BAT% amd64
+CALL %SET_BAT% x86_amd64
 
 @REM TEST JUMP
 @REM GOTO DO_CGAL
@@ -376,8 +376,8 @@ REN %TMP_DIR% %TMP_SRC%
 CD %TMP_SRC%
 
 @IF NOT EXIST jconfig.h (
-@echo Doing 'nmake -f makefile.vc setup-v10'
-nmake -f makefile.vc setup-v10
+@echo Doing 'nmake -f makefile.vc setup-v%_MSVS%'
+nmake -f makefile.vc setup-v%_MSVS%
 @if ERRORLEVEL 1 (
 @set /A HAD_ERROR+=1
 @echo %HAD_ERROR%: Error exit makefile.vc %TMP_SRC%
@@ -643,7 +643,7 @@ IF %HAVELOG% EQU 1 (
 @REM ECHO However this is ONLY obtaining the simpits boost and binaries %BLDLOG%
 @REM ECHO while download_and_compile obtains the SVN source and does a compile %BLDLOG%
 @REM ECHO So this is presently SKIPPED %BLDLOG%
-@REM GOTO DN_BOOST
+@GOTO DN_BOOST
 @REM :DO_BOOST2
 
 @REM set TMP_URL=http://flightgear.simpits.org:8080/job/Boost-Win64/lastSuccessfulBuild/artifact/*zip*/archive.zip
@@ -725,7 +725,7 @@ IF %HAVELOG% EQU 1 (
 @set TMP_SRC=libcgal-source
 @set TMP_BLD=libcgal-build
 @set TMP_DIR=CGAL-4.8
-@set TMP_PRE=%WORKSPACE%\cgal-source\auxiliary\gmp;%WORKSPACE%\Boost;%WORKSPACE%\install\Boost;%WORKSPACE%\%TMP3RD%
+@set TMP_PRE=%WORKSPACE%\cgal-source\auxiliary\gmp;%BOOST_DIR%;%WORKSPACE%\%TMP3RD%
 
 @if NOT EXIST %TMP_ZIP% (
 @echo Moment, doing 'CALL %GET_EXE% %TMP_URL% %GET_OPT% %TMP_ZIP%'
@@ -1149,7 +1149,7 @@ IF %HAVELOG% EQU 1 (
 @set TMP_SRC=plib-source
 @set TMP_BLD=plib-build
 
-@if NOT EXIST %TMP_ZIP% ( 
+@if NOT EXIST %TMP_ZIP% (
 CALL %GET_EXE% %TMP_URL% %GET_OPT% %TMP_ZIP%
 )
 
@@ -1209,7 +1209,7 @@ cmake --build . --config Release --target INSTALL %BLDLOG%
 @echo %HAD_ERROR%: Error exit building source %TMP_SRC%
 @echo %HAD_ERROR%: Error exit building source %TMP_SRC% >> %ERRLOG%
 )
- 
+
 xcopy %WORKSPACE%\plib-build\build\include\* %WORKSPACE%\%TMP3RD%\include /y /s /q
 xcopy %WORKSPACE%\plib-build\build\lib\*.lib %WORKSPACE%\%TMP3RD%\lib /y /q
 @REM xcopy %WORKSPACE%\plib-build\build\bin\zlib.dll %WORKSPACE%\%TMP3RD%\bin /y /q
@@ -1313,7 +1313,7 @@ IF %HAVELOG% EQU 1 (
 @goto :EOF
 
 :SET_BOOST
-@set Boost_DIR=%WORKSPACE%\Boost
+@set Boost_DIR=%BOOST_ROOT%
 @echo Set ENV Boost_DIR=%Boost_DIR% %BLDLOG%
 @REM could also use BOOST_ROOT and BOOSTROOT to find Boost.
 @goto :EOF
