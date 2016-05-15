@@ -47,7 +47,7 @@
             @set "RDPARTY_ARCH=x64"
             @set "RDPARTY_DIR=3rdParty.x64"
             @set "MSVCBIN=%VS_PATH%\VC\bin\x86_%BUILD_BITS%\vcvarsx86_%BUILD_BITS%.bat"
-            @set "COMPILER=x86_amd64"
+            @set "COMPILER=x86_%BUILD_BITS%"
             ) ELSE (
                 @set "RDPARTY_ARCH=win32"
                 @set "RDPARTY_DIR=3rdParty"
