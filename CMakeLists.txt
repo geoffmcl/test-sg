@@ -68,6 +68,7 @@ if(WIN32 AND MSVC)
     # endif (${MSVC_VERSION} EQUAL 1600)
     #set( NOMINMAX 1 )
     # to distinguish between debug and release libs
+    list(APPEND EXTRA_LIBS ws2_32 Winmm)
     set( CMAKE_DEBUG_POSTFIX "d" )
 else()
     # items for unix
@@ -97,10 +98,10 @@ endif ()
 # SIMGEAR_INCLUDE_DIRS, where to find the headers
 find_package( SimGear )
 if (SIMGEAR_FOUND)
-    message(STATUS, "*** SimGear found. lib ${SIMGEAR_CORE_LIBRARIES} inc ${SIMGEAR_INCLUDE_DIRS}")
-    list(APPEND add_LIBS ${SIMGEAR_CORE_LIBRARIES})
+    message(STATUS "*** SimGear found. lib ${SIMGEAR_LIBRARIES} inc ${SIMGEAR_INCLUDE_DIRS}")
+    list(APPEND add_LIBS ${SIMGEAR_LIBRARIES})
     include_directories( ${SIMGEAR_INCLUDE_DIRS} )
-    if (NOT WIN32)
+    #if (NOT WIN32)
         find_package(Threads REQUIRED)
         # The following variables are set
         #  CMAKE_THREAD_LIBS_INIT     - the thread library
@@ -112,8 +113,10 @@ if (SIMGEAR_FOUND)
         if (Threads_FOUND)
             message(STATUS "*** Threads found lib ${CMAKE_THREAD_LIBS_INIT}")
             list(APPEND add_LIBS ${CMAKE_THREAD_LIBS_INIT})
+        else ()
+            message(STATUS "Threads NOT found!")
         endif ()
-    endif ()
+    #endif ()
 else ()
     message(FATAL_ERROR, "SimGear NOT found!")
 endif ()
@@ -129,6 +132,33 @@ if (ZLIB_FOUND)
     add_definitions( -DADD_ZLIB_TEST )
 else ()
     message(STATUS "*** ZLIB not found!")
+endif ()
+
+#   Boost_FOUND            - True if headers and requested libraries were found
+#   Boost_INCLUDE_DIRS     - Boost include directories
+#   Boost_LIBRARY_DIRS     - Link directories for Boost libraries
+#   Boost_LIBRARIES        - Boost component libraries to be linked
+find_package( Boost )
+if (Boost_FOUND)
+    message(STATUS "*** Found Boost inc ${Boost_INCLUDE_DIRS}") # , lib ${Boost_LIBRARIES}")
+    # list(APPEND add_LIBS ${Boost_LIBRARIES})
+    include_directories( ${Boost_INCLUDE_DIRS} )
+    add_definitions( -DADD_BOOST_TESTS )
+else ()
+    message(STATUS "*** Boost not found!")
+endif ()
+
+#   CURL_FOUND          - True if curl found.
+#   CURL_INCLUDE_DIRS   - where to find curl/curl.h, etc.
+#   CURL_LIBRARIES      - List of libraries when using curl.
+#   CURL_VERSION_STRING - the version of curl found (since CMake 2.8.8)
+find_package( CURL )
+if (CURL_FOUND)
+    message( STATUS "*** CURL found. inc ${CURL_INCLUDE_DIRS} lib ${CURL_LIBRARIES}")
+    include_directories( ${CURL_INCLUDE_DIRS} )
+    list(APPEND add_LIBS ${CURL_LIBRARIES})
+else ()
+    message( STATUS "*** CURL NOT found!")
 endif ()
 
 # configuration file, if needed
@@ -218,4 +248,25 @@ if (MSVC)
 endif ()
 # deal with install, if any...
 #install( TARGETS ${name} DESTINATION bin )
+
+if (SIMGEAR_FOUND AND Boost_FOUND AND CURL_FOUND)
+########################################################################
+    set(name metar)
+    set(dir src)
+    set(${name}_SRCS
+        ${dir}/${name}_main.cxx
+        )
+    add_executable( ${name} ${${name}_SRCS} )
+    if (add_LIBS OR EXTRA_LIBS)
+        target_link_libraries( ${name} ${add_LIBS} ${EXTRA_LIBS})
+    endif ()
+    if (MSVC)
+        set_target_properties( ${name} PROPERTIES DEBUG_POSTFIX d )
+    endif ()
+# deal with install, if any...
+#install( TARGETS ${name} DESTINATION bin )
+    
+########################################################################
+endif ()
+
 # eof
