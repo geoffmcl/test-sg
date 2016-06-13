@@ -1,16 +1,29 @@
 @setlocal
 @REM 20160416 - 22/01/2016
 @set DOINST=0
+@set BLDDBG=1
 @set TMPPRJ=test-sg
 @set TMPSRC=..
 @set TMPBGN=%TIME%
-@set TMPINS=X:\3rdParty
 @set TMPLOG=bldlog-1.txt
-
-@set TMPSG=X:\install\msvc100\simgear
+@set BLDDIR=%CD%
+@REM Local relative
+@REM set TMPSG=..\..\install\msvc100\simgear
+@REM set TMPBOOST=..\..\Boost
+@REM On D: drive - fresh build
+@set TMPINS=D:\FG\d-and-c\3rdParty.x64
+@set TMPSG=D:\FG\d-and-c\install\simgear
+@set TMPBOOST=D:\FG\d-and-c\Boost
+@REM On X: drive
+@REM set TMPINS=X:\3rdParty.x64
+@REM set TMPBOOST=X:\boost_1_53_0
+@REM set TMPSG=X:\install\msvc100\simgear
 @if NOT EXIST %TMPSG%\nul goto NOSG
+@set SET_BAT=%ProgramFiles(x86)%\Microsoft Visual Studio 10.0\VC\vcvarsall.bat
+@if NOT EXIST "%SET_BAT%" goto NOBAT
 
 @set TMPOPTS=-DCMAKE_INSTALL_PREFIX=%TMPINS%
+@set TMPOPTS=%TMPOPTS% -G "Visual Studio 10 Win64"
 @REM set TMPOPTS=%TMPOPTS% -DBUILD_SHARED_LIB=ON
 
 :RPT
@@ -38,15 +51,42 @@
 @echo Set ENV SIMGEAR_DIR=%SIMGEAR_DIR%
 @echo Set ENV SIMGEAR_DIR=%SIMGEAR_DIR% >> %TMPLOG%
 
+@if NOT EXIST %TMPBOOST%\nul goto NOBOOST
+@REM pushd %TMPBOOST%
+@REM set BOOST_ROOT=%CD%
+@REM popd
+@set BOOST_ROOT=%TMPBOOST%
+@echo Have set ENV BOOST_ROOT=%BOOST_ROOT%
+@goto DN_BOOST
+:NOBOOST
+@echo Can NOT locate %TMPBOOST%! *** FIX ME ***
+:DN_BOOST
+
 @if NOT EXIST %TMPSRC%\CMakeLists.txt goto NOCM
 
-cmake %TMPSRC% %TMPOPTS% >> %TMPLOG% 2>&1
+@echo Doing: 'call "%SET_BAT%" %PROCESSOR_ARCHITECTURE%'
+@echo Doing: 'call "%SET_BAT%" %PROCESSOR_ARCHITECTURE%' >> %TMPLOG%
+@call "%SET_BAT%" %PROCESSOR_ARCHITECTURE% >> %TMPLOG% 2>&1
+@if ERRORLEVEL 1 goto ERR0
+
+@cd %BLDDIR%
+
+@echo Doing 'cmake %TMPSRC% %TMPOPTS%'
+@echo Doing 'cmake %TMPSRC% %TMPOPTS%' >> %TMPLOG% 2>&1
+@cmake %TMPSRC% %TMPOPTS% >> %TMPLOG% 2>&1
 @if ERRORLEVEL 1 goto ERR1
 
-cmake --build . --config Debug  >> %TMPLOG% 2>&1
+@if NOT %BLDDBG% EQU 1 goto DNDBG1
+@echo Doing: 'cmake --build . --config Debug'
+@echo Doing: 'cmake --build . --config Debug'  >> %TMPLOG% 2>&1
+@cmake --build . --config Debug  >> %TMPLOG% 2>&1
 @if ERRORLEVEL 1 goto ERR2
+:DNDBG1
 
-cmake --build . --config Release  >> %TMPLOG% 2>&1
+
+@echo Doing 'cmake --build . --config Release'
+@echo Doing 'cmake --build . --config Release'  >> %TMPLOG% 2>&1
+@cmake --build . --config Release  >> %TMPLOG% 2>&1
 @if ERRORLEVEL 1 goto ERR3
 
 @fa4 "***" %TMPLOG%
@@ -64,8 +104,10 @@ cmake --build . --config Release  >> %TMPLOG% 2>&1
 
 @pause
 
+@if NOT %BLDDBG% EQU 1 goto DNDBG2
 cmake --build . --config Debug  --target INSTALL >> %TMPLOG% 2>&1
 @if ERRORLEVEL 1 goto ERR4
+:DNDBG2
 
 cmake --build . --config Release  --target INSTALL >> %TMPLOG% 2>&1
 @if ERRORLEVEL 1 goto ERR5
@@ -76,6 +118,10 @@ cmake --build . --config Release  --target INSTALL >> %TMPLOG% 2>&1
 @echo All done... see %TMPLOG%
 
 @goto END
+
+:NOBAT
+@echo Can NOT locate MSVC setup batch "%SET_BAT%"! *** FIX ME ***
+@goto ISERR
 
 :NOSG
 @echo Can NOT locate %TMPSG%! *** FIX ME ***
@@ -89,6 +135,10 @@ cmake --build . --config Release  --target INSTALL >> %TMPLOG% 2>&1
 :NOCM
 @echo Can NOT locate %TMPSRC%\CMakeLists.txt!
 @echo Can NOT locate %TMPSRC%\CMakeLists.txt! >> %TMPLOG%
+@goto ISERR
+
+:ERR0
+@echo MSVC 10 setup error
 @goto ISERR
 
 :ERR1
