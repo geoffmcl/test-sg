@@ -18,4 +18,5 @@ Makefile
 SGPath_test
 test-sg
 parseCache
+x64/*
 
