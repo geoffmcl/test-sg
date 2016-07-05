@@ -136,6 +136,7 @@ md %WORKSPACE%\%TMP3RD%\include
 @REM GOTO DO_GDAL 
 @REM GOTO DO_BOOST
 @REM goto DO_JPEG
+@REM goto DO_CURL
 
 :DO_ZLIB
 @echo %0: ############################# Download ^& compile ZLIB %BLDLOG%
@@ -445,7 +446,6 @@ cd %WORKSPACE%
 @REM goto EXIT
 
 :DO_CURL
-@set _TMP_LIBS=%_TMP_LIBS% CURL
 @echo %0: ############################# Download ^& compile LIBCURL %BLDLOG%
 IF %HAVELOG% EQU 1 (
 @echo %0: ############################# Download ^& compile LIBCURL to %LOGFIL%
@@ -488,11 +488,13 @@ MD %TMP_BLD%
 )
 
 CD %TMP_BLD%
-ECHO Doing: 'cmake ..\%TMP_SRC% -G "%GENERATOR%" -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\libcurl-build\build" -DCMAKE_PREFIX_PATH:PATH="%WORKSPACE%\%TMP3RD%"' %BLDLOG%
+@set _TMPOPTS=-DCURL_STATICLIB:BOOL=ON -G "%GENERATOR%" -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\libcurl-build\build" -DCMAKE_PREFIX_PATH:PATH="%WORKSPACE%\%TMP3RD%"
+@if EXIST CMakeCache.txt @del CMakeCache.txt
+ECHO Doing: 'cmake ..\%TMP_SRC% %_TMPOPTS%' %BLDLOG%
 IF %HAVELOG% EQU 1 (
-ECHO Doing: 'cmake ..\%TMP_SRC% -G "%GENERATOR%" -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\libcurl-build\build" -DCMAKE_PREFIX_PATH:PATH="%WORKSPACE%\%TMP3RD%"' to %LOGFIL%
+ECHO Doing: 'cmake ..\%TMP_SRC% %_TMPOPTS%' to %LOGFIL%
 )
-cmake ..\%TMP_SRC% -G "%GENERATOR%" -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\libcurl-build\build" -DCMAKE_PREFIX_PATH:PATH="%WORKSPACE%\%TMP3RD%" %BLDLOG%
+cmake ..\%TMP_SRC% %_TMPOPTS% %BLDLOG%
 @if ERRORLEVEL 1 (
 @set /A HAD_ERROR+=1
 @echo %HAD_ERROR%: Error exit cmake conf/gen %TMP_SRC%
@@ -513,11 +515,15 @@ cd %WORKSPACE%
  
 xcopy %WORKSPACE%\libcurl-build\build\include\* %WORKSPACE%\%TMP3RD%\include /y /s /q
 xcopy %WORKSPACE%\libcurl-build\build\lib\libcurl_imp.lib %WORKSPACE%\%TMP3RD%\lib /y /q
+xcopy %WORKSPACE%\libcurl-build\build\lib\libcurl.lib %WORKSPACE%\%TMP3RD%\lib /y /q
 xcopy %WORKSPACE%\libcurl-build\build\lib\libcurl.dll %WORKSPACE%\%TMP3RD%\bin /y /q
 xcopy %WORKSPACE%\libcurl-build\build\bin\curl.exe %WORKSPACE%\%TMP3RD%\bin /y /q
-
+@set _TMP_LIBS=%_TMP_LIBS% CURL
 :DN_CURL
 cd %WORKSPACE%
+@REM TEST EXIT - REMOVE AFTER TESTING
+@REM goto END
+
 :DO_GDAL 
 @if %ADD_GDAL% EQU 0 goto DN_GDAL
  
