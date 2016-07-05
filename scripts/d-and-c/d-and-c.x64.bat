@@ -78,7 +78,7 @@ set  error=0
 @set VS_BAT=
 @set GENERATOR=
 @set MSC_VERS=
-@call %TMP_MSVC%
+@call %TMP_MSVC% >> %LOGFIL% 2>&1
 @if "%GENERATOR%x" == "x" (
 @set /A HAD_ERROR+=1
 @set /A error+=1
