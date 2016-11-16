@@ -68,7 +68,7 @@ if(WIN32 AND MSVC)
     # endif (${MSVC_VERSION} EQUAL 1600)
     #set( NOMINMAX 1 )
     # to distinguish between debug and release libs
-    list(APPEND EXTRA_LIBS ws2_32 Winmm)
+    list(APPEND EXTRA_LIBS ws2_32 Winmm Shlwapi)
     set( CMAKE_DEBUG_POSTFIX "d" )
 else()
     # items for unix
@@ -174,9 +174,19 @@ else()
 endif()
 # Total libs 0, exes 1
 #################################################
-##### LIBRARIES 0 #####
+##### LIBRARIES 1 #####
 #################################################
-#list(APPEND add_LIBS ${name})
+set(name util_lib)
+set(dir src/utils)
+include_directories( ${dir} )
+set(${name}_SRCS
+    ${dir}/sprtf.cxx
+    )
+set(${name}_HDRS
+    ${dir}/sprtf.hxx
+    )
+add_library( ${name} ${${name}_SRCS} ${${name}_HDRS} )
+list(APPEND add_LIBS ${name})
 # deal with install, if any...
 #install( TARGETS ${name}
 #    RUNTIME DESTINATION bin
@@ -195,8 +205,8 @@ set(${name}_SRCS
     ${dir}/test-sg.cxx
     )
 add_executable( ${name} ${${name}_SRCS} )
-if (add_LIBS)
-    target_link_libraries( ${name} ${add_LIBS} )
+if (add_LIBS OR EXTRA_LIBS)
+    target_link_libraries( ${name} ${add_LIBS} ${EXTRA_LIBS} )
 endif ()
 if (MSVC)
     set_target_properties( ${name} PROPERTIES DEBUG_POSTFIX d )
@@ -210,8 +220,8 @@ set(${name}_SRCS
     ${dir}/${name}.cxx
     )
 add_executable( ${name} ${${name}_SRCS} )
-if (add_LIBS)
-    target_link_libraries( ${name} ${add_LIBS} )
+if (add_LIBS OR EXTRA_LIBS)
+    target_link_libraries( ${name} ${add_LIBS} ${EXTRA_LIBS} )
 endif ()
 if (MSVC)
     set_target_properties( ${name} PROPERTIES DEBUG_POSTFIX d )
@@ -225,8 +235,8 @@ set(${name}_SRCS
     ${dir}/${name}.cxx
     )
 add_executable( ${name} ${${name}_SRCS} )
-if (add_LIBS)
-    target_link_libraries( ${name} ${add_LIBS} )
+if (add_LIBS OR EXTRA_LIBS)
+    target_link_libraries( ${name} ${add_LIBS} ${EXTRA_LIBS} )
 endif ()
 if (MSVC)
     set_target_properties( ${name} PROPERTIES DEBUG_POSTFIX d )
@@ -240,8 +250,23 @@ set(${name}_SRCS
     ${dir}/${name}.cxx
     )
 add_executable( ${name} ${${name}_SRCS} )
-if (add_LIBS)
-    target_link_libraries( ${name} ${add_LIBS} )
+if (add_LIBS OR EXTRA_LIBS)
+    target_link_libraries( ${name} ${add_LIBS} ${EXTRA_LIBS} )
+endif ()
+if (MSVC)
+    set_target_properties( ${name} PROPERTIES DEBUG_POSTFIX d )
+endif ()
+# deal with install, if any...
+#install( TARGETS ${name} DESTINATION bin )
+
+set(name sg_bucket)
+set(dir src)
+set(${name}_SRCS
+    ${dir}/${name}.cxx
+    )
+add_executable( ${name} ${${name}_SRCS} )
+if (add_LIBS OR EXTRA_LIBS)
+    target_link_libraries( ${name} ${add_LIBS} ${EXTRA_LIBS} )
 endif ()
 if (MSVC)
     set_target_properties( ${name} PROPERTIES DEBUG_POSTFIX d )
