@@ -19,4 +19,8 @@ SGPath_test
 test-sg
 parseCache
 x64/*
+libutil_lib.a
+metar
+sg_bucket
+sg_dir_test
 
