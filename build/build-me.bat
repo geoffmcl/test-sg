@@ -1,5 +1,7 @@
 @setlocal
+@REM 20161106 - Using msvc140
 @REM 20160416 - 22/01/2016
+@set VCVERS=14
 @set DOINST=0
 @set BLDDBG=1
 @set TMPPRJ=test-sg
@@ -11,19 +13,22 @@
 @REM set TMPSG=..\..\install\msvc100\simgear
 @REM set TMPBOOST=..\..\Boost
 @REM On D: drive - fresh build
-@set TMPINS=D:\FG\d-and-c\3rdParty.x64
-@set TMPSG=D:\FG\d-and-c\install\simgear
-@set TMPBOOST=D:\FG\d-and-c\Boost
+@REM set TMPINS=D:\FG\d-and-c\3rdParty.x64
+@REM set TMPSG=D:\FG\d-and-c\install\simgear
+@REM set TMPBOOST=D:\FG\d-and-c\Boost
 @REM On X: drive
-@REM set TMPINS=X:\3rdParty.x64
-@REM set TMPBOOST=X:\boost_1_53_0
-@REM set TMPSG=X:\install\msvc100\simgear
+@set TMPINS=X:\3rdParty.x64
+@REM set TMPBOOST=X:\boost_1_60_0
+@set TMPBOOST=C:\local\boost_1_62_0
+@set TMPSG=X:\install\msvc140-64\simgear
 @if NOT EXIST %TMPSG%\nul goto NOSG
-@set SET_BAT=%ProgramFiles(x86)%\Microsoft Visual Studio 10.0\VC\vcvarsall.bat
+@set SET_BAT=%ProgramFiles(x86)%\Microsoft Visual Studio %VCVERS%.0\VC\vcvarsall.bat
 @if NOT EXIST "%SET_BAT%" goto NOBAT
+@REM Note: BOOST_ROOT set later
+@if NOT EXIST %TMPBOOST%\nul goto NOBOOST
 
 @set TMPOPTS=-DCMAKE_INSTALL_PREFIX=%TMPINS%
-@set TMPOPTS=%TMPOPTS% -G "Visual Studio 10 Win64"
+@set TMPOPTS=%TMPOPTS% -G "Visual Studio %VCVERS% Win64"
 @REM set TMPOPTS=%TMPOPTS% -DBUILD_SHARED_LIB=ON
 
 :RPT
@@ -56,11 +61,8 @@
 @REM set BOOST_ROOT=%CD%
 @REM popd
 @set BOOST_ROOT=%TMPBOOST%
-@echo Have set ENV BOOST_ROOT=%BOOST_ROOT%
-@goto DN_BOOST
-:NOBOOST
-@echo Can NOT locate %TMPBOOST%! *** FIX ME ***
-:DN_BOOST
+@echo Set ENV BOOST_ROOT=%BOOST_ROOT%
+@echo Set ENV BOOST_ROOT=%BOOST_ROOT% >> %TMPLOG%
 
 @if NOT EXIST %TMPSRC%\CMakeLists.txt goto NOCM
 
@@ -118,6 +120,10 @@ cmake --build . --config Release  --target INSTALL >> %TMPLOG% 2>&1
 @echo All done... see %TMPLOG%
 
 @goto END
+
+:NOBOOST
+@echo NOT EXIST %TMPBOOST%\nul! *** FIX ME ***
+@goto ISERR
 
 :NOBAT
 @echo Can NOT locate MSVC setup batch "%SET_BAT%"! *** FIX ME ***
