@@ -8,6 +8,7 @@
 
 #include <stdio.h>
 #include <string.h> // for strdup(), ...
+#include <stdlib.h> // for atof(), ... in unix
 #include <string>
 #include <vector>
 #include <simgear/compiler.h>
