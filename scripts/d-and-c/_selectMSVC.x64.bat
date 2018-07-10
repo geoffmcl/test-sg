@@ -13,7 +13,18 @@
 @REM GENERATOR = The cmake -G value
 @REM ##############################################################
 @set TMPERR=0
-@REM Switch MSVC Version
+@REM Switch MSVC Versions
+@set _MSVS=14
+@set _MSNUM=1900
+@set MSC_VERS=msvc140
+@set VS_PATH=%ProgramFiles(x86)%\Microsoft Visual Studio %_MSVS%.0
+@set "VS_BAT=%VS_PATH%\VC\vcvarsall.bat"
+@set BUILD_BITS=%PROCESSOR_ARCHITECTURE%
+@set GENERATOR=Visual Studio %_MSVS% Win64
+@IF EXIST "%VS_PATH%" goto GOT_VS_PATH
+@REM ##############################################################
+@REM Fall back verions....
+
 @set _MSVS=10
 @set _MSNUM=1600
 @set MSC_VERS=msvc100
