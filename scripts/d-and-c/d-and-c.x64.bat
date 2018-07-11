@@ -1,6 +1,7 @@
 @setlocal
 @echo off
 @REM History, growing upwards...
+@REM d-and-c.x64.bat v1.3.12 20180710 - external call...
 @REM d-and-c.x64.bat v1.3.11 20160522 - use external make3rd.x64.bat ...
 @set TMPMK3RD=make3rd.x64.bat
 @REM d-and-c.x64.bat v1.3.10 20160515 - use external _selectMSVC.x64.bat ...
@@ -24,6 +25,7 @@ set  error=0
 @REM echo Unable to locate %FG_ROOT%\version
 @REM exit /b 1
 @REM )
+@if NOT EXIST %PWD%\build @md %PWD%\build
 @set LOGFIL=%PWD%\build\bldlog-1.txt
 @echo Begin build %DATE% %TIME% > %LOGFIL%
 @set BLDLOG=
@@ -38,7 +40,7 @@ set  error=0
 :NO3RD
 @REM Oops, the 3rdParty setup has NOT run, sans fault...
 @REM Do we have a setup batch file?
-@if NOT EXIST %TMPMK3RD% goto NO3RD2
+@REM if NOT EXIST %TMPMK3RD% goto NO3RD2
 @REM Call it... to fix 3rd Party
 @echo Doing: 'call %TMPMK3RD%' ... to fix 3rd Party
 @call %TMPMK3RD%
@@ -70,7 +72,7 @@ set  error=0
 @REM externa; setup
 @set TMP_MSVC=_selectMSVC.x64.bat
 @if NOT "%RDPARTY_DIR%x" == "x" goto DNSEL
-@if NOT EXIST %TMP_MSVC% goto NO_MSVC_SEL 
+@REM if NOT EXIST %TMP_MSVC% goto NO_MSVC_SEL 
 
 @REM Switch MSVC Version
 @set _MSVS=0

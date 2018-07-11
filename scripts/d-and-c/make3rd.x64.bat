@@ -3,6 +3,7 @@
 @REM Build 3rdParty components prior to building flightgear
 @REM ================================================================================
 @REM ################################################################################
+@REM 20180710 - v1.0.7 - General update, external call
 @REM 20160521 - v1.0.6 - Use external _setupBoost.x64.bat, which uses build-boost.x64.bat 
 @REM 20160513 - v1.0.5 - Use external _selectMSVC.x64 to set some variables for us
 @REM 20160511 - v1.0.4 - Add PLIB build, and install, through special PLIB-1.8.5.zip with a CMakeLists.txt
@@ -14,8 +15,8 @@
 @REM ################################################################################
 @set TMP_MSVC=_selectMSVC.x64.bat
 @set "WORKSPACE=%CD%"
-@if EXIST ..\..\.git\nul goto NOT_IN_SRC
-@if NOT EXIST %TMP_MSVC% goto NO_MSVC_SEL 
+@REM if EXIST ..\..\.git\nul goto NOT_IN_SRC
+@REM if NOT EXIST %TMP_MSVC% goto NO_MSVC_SEL 
 @set TMPDN3RD=make3rd.x64.txt
 @if EXIST %TMPDN3RD% (
 @echo.
@@ -61,7 +62,7 @@
 @set MOV_OPT=
 
 @set TMP3RD=3rdParty.x64
-@set PERL_FIL=%WORKSPACE%\rep32w64.pl
+@REM set PERL_FIL=%WORKSPACE%\rep32w64.pl
 @set LOGFIL=%WORKSPACE%\bldlog-2.txt
 @set BLDLOG=
 @REM Uncomment this, and add to config/build line, if you can output to a LOG
@@ -133,10 +134,12 @@ md %WORKSPACE%\%TMP3RD%\include
 
 @REM TEST JUMP - REMOVE AFTER TESTING
 @REM GOTO DO_CGAL
-@REM GOTO DO_GDAL 
+@REM GOTO DO_GDAL
 @REM GOTO DO_BOOST
 @REM goto DO_JPEG
 @REM goto DO_CURL
+@REM goto DO_FLTK
+@REM goto DO_GEOS
 
 :DO_ZLIB
 @echo %0: ############################# Download ^& compile ZLIB %BLDLOG%
@@ -144,10 +147,10 @@ IF %HAVELOG% EQU 1 (
 @echo %0: ############################# Download ^& compile ZLIB
 )
 
-@set TMP_URL=http://zlib.net/zlib128.zip
+@set TMP_URL=http://zlib.net/zlib1211.zip
 @set TMP_ZIP=zlib.zip
 @set TMP_SRC=zlib-source
-@set TMP_DIR=zlib-1.2.8
+@set TMP_DIR=zlib-1.2.11
 @set TMP_BLD=zlib-build
 
 @if NOT EXIST zlib.zip ( 
@@ -178,11 +181,11 @@ md %TMP_BLD%
 
 CD %TMP_BLD%
 
-ECHO Doing: 'cmake ..\%TMP_SRC% -G "%GENERATOR%" -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\zlib-build\build" %BLDLOG%
+ECHO Doing: 'cmake ..\%TMP_SRC% -G "%GENERATOR%" -DCMAKE_INSTALL_PREFIX:PATH=%WORKSPACE%\zlib-build\build %BLDLOG%
 IF %HAVELOG% EQU 1 (
-ECHO Doing: 'cmake ..\%TMP_SRC% -G "%GENERATOR%" -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\zlib-build\build"
+ECHO Doing: 'cmake ..\%TMP_SRC% -G "%GENERATOR%" -DCMAKE_INSTALL_PREFIX:PATH=%WORKSPACE%\zlib-build\build
 )
-cmake ..\%TMP_SRC% -G "%GENERATOR%" -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\zlib-build\build" %BLDLOG%
+cmake ..\%TMP_SRC% -G "%GENERATOR%" -DCMAKE_INSTALL_PREFIX:PATH=%WORKSPACE%\zlib-build\build %BLDLOG%
 @if ERRORLEVEL 1 (
 @set /A HAD_ERROR+=1
 @echo %HAD_ERROR%: Error exit config/gen %TMP_SRC%
@@ -210,15 +213,17 @@ xcopy %WORKSPACE%\zlib-build\build\bin\zlib.dll %WORKSPACE%\%TMP3RD%\bin /y /q
 cd %WORKSPACE%
 
 :DO_TIFF
+@set TMP_PRJ=libtiff
 @echo %0: ############################# Download ^& compile LIBTIFF %BLDLOG%
 IF %HAVELOG% EQU 1 (
 @echo %0: ############################# Download ^& compile LIBTIFF to %LOGFIL%
 )
 
-@set TMP_URL=http://download.osgeo.org/libtiff/tiff-4.0.3.zip
+@set TMP_URL=http://download.osgeo.org/libtiff/tiff-4.0.9.zip
 @set TMP_ZIP=libtiff.zip
 @set TMP_SRC=libtiff-source
-@set TMP_DIR=tiff-4.0.3
+@set TMP_DIR=tiff-4.0.9
+@set TMP_BLD=libtiff-build
 
 @if NOT EXIST %TMP_ZIP% ( 
 CALL %GET_EXE% %TMP_URL% %GET_OPT% %TMP_ZIP%
@@ -238,27 +243,41 @@ REN %TMP_DIR% %TMP_SRC%
 @goto DN_TIFF
 )
 
-cd %TMP_SRC%
-ECHO Doing: 'nmake -f makefile.vc' %BLDLOG%
-IF %HAVELOG% EQU 1 (
-ECHO Doing: 'nmake -f makefile.vc'
+@if NOT EXIST %TMP_BLD%\nul (
+md %TMP_BLD%
 )
-nmake -f makefile.vc
+
+CD %TMP_BLD%
+
+ECHO Doing: 'cmake ..\%TMP_SRC% -G "%GENERATOR%" -DCMAKE_INSTALL_PREFIX:PATH=%WORKSPACE%\libtiff-build\build -DCMAKE_PREFIX_PATH:PATH=%WORKSPACE%\%TMP3RD% %BLDLOG%
+IF %HAVELOG% EQU 1 (
+ECHO Doing: 'cmake ..\%TMP_SRC% -G "%GENERATOR%" -DCMAKE_INSTALL_PREFIX:PATH=%WORKSPACE%\libtiff-build\build -DCMAKE_PREFIX_PATH:PATH=%WORKSPACE%\%TMP3RD%
+)
+cmake ..\%TMP_SRC% -G "%GENERATOR%" -DCMAKE_INSTALL_PREFIX:PATH=%WORKSPACE%\libtiff-build\build -DCMAKE_PREFIX_PATH:PATH=%WORKSPACE%\%TMP3RD% %BLDLOG%
+@if ERRORLEVEL 1 (
+@set /A HAD_ERROR+=1
+@echo %HAD_ERROR%: Error exit config/gen %TMP_SRC%
+@echo %HAD_ERROR%: Error exit config/gen %TMP_SRC% >> %ERRLOG%
+)
+
+ECHO Doing 'cmake --build . --config Release --target INSTALL' %BLDLOG%
+IF %HAVELOG% EQU 1 (
+ECHO Doing 'cmake --build . --config Release --target INSTALL'
+)
+cmake --build . --config Release --target INSTALL >> %ERRLOG% 2>&1
 @if ERRORLEVEL 1 (
 @set /A HAD_ERROR+=1
 @echo %HAD_ERROR%: Error exit building source %TMP_SRC%
 @echo %HAD_ERROR%: Error exit building source %TMP_SRC% >> %ERRLOG%
 )
-
+ 
 cd %WORKSPACE%
 
-xcopy %WORKSPACE%\libtiff-source\libtiff\libtiff.lib %WORKSPACE%\%TMP3RD%\lib\ /y /f
-xcopy %WORKSPACE%\libtiff-source\libtiff\libtiff_i.lib %WORKSPACE%\%TMP3RD%\lib\ /y /f
-xcopy %WORKSPACE%\libtiff-source\libtiff\libtiff.dll %WORKSPACE%\%TMP3RD%\bin\ /y /f
-xcopy %WORKSPACE%\libtiff-source\libtiff\tiff.h %WORKSPACE%\%TMP3RD%\include\ /y /f
-xcopy %WORKSPACE%\libtiff-source\libtiff\tiffconf.h %WORKSPACE%\%TMP3RD%\include\ /y /f
-xcopy %WORKSPACE%\libtiff-source\libtiff\tiffio.h %WORKSPACE%\%TMP3RD%\include\ /y /f
-xcopy %WORKSPACE%\libtiff-source\libtiff\tiffvers.h %WORKSPACE%\%TMP3RD%\include\ /y /f
+xcopy %WORKSPACE%\libtiff-build\build\include\* %WORKSPACE%\%TMP3RD%\include /y /s /q
+xcopy %WORKSPACE%\libtiff-build\build\lib\* %WORKSPACE%\%TMP3RD%\lib /y /q
+xcopy %WORKSPACE%\libtiff-build\build\bin\* %WORKSPACE%\%TMP3RD%\bin /y /q
+
+
 @if EXIST %WORKSPACE%\%TMP3RD%\include\tiff.h (
 @set _TMP_LIBS=%_TMP_LIBS% TIFF
 )
@@ -303,12 +322,12 @@ MD %TMP_BLD%
 )
 
 CD %TMP_BLD%
-ECHO Doing 'cmake ..\%TMP_SRC% -G "%GENERATOR%" -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\libpng-build\build" -DCMAKE_PREFIX_PATH:PATH="%WORKSPACE%\%TMP3RD%"' %BLDLOG%
+ECHO Doing 'cmake ..\%TMP_SRC% -G "%GENERATOR%" -DCMAKE_INSTALL_PREFIX:PATH=%WORKSPACE%\libpng-build\build -DCMAKE_PREFIX_PATH:PATH=%WORKSPACE%\%TMP3RD%' %BLDLOG%
 IF %HAVELOG% EQU 1 (
-ECHO Doing 'cmake ..\%TMP_SRC% -G "%GENERATOR%" -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\libpng-build\build" -DCMAKE_PREFIX_PATH:PATH="%WORKSPACE%\%TMP3RD%"' to %LOGFIL%
+ECHO Doing 'cmake ..\%TMP_SRC% -G "%GENERATOR%" -DCMAKE_INSTALL_PREFIX:PATH=%WORKSPACE%\libpng-build\build -DCMAKE_PREFIX_PATH:PATH=%WORKSPACE%\%TMP3RD%' to %LOGFIL%
 )
 
-cmake ..\%TMP_SRC% -G "%GENERATOR%" -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\libpng-build\build" -DCMAKE_PREFIX_PATH:PATH="%WORKSPACE%\%TMP3RD%"
+cmake ..\%TMP_SRC% -G "%GENERATOR%" -DCMAKE_INSTALL_PREFIX:PATH=%WORKSPACE%\libpng-build\build -DCMAKE_PREFIX_PATH:PATH=%WORKSPACE%\%TMP3RD%
 @if ERRORLEVEL 1 (
 @set /A HAD_ERROR+=1
 @echo %HAD_ERROR%: Error exit cmake config/gen %TMP_SRC%
@@ -337,108 +356,70 @@ xcopy %WORKSPACE%\libpng-build\build\bin\libpng16.dll %WORKSPACE%\%TMP3RD%\bin /
 :DN_PNG
 cd %WORKSPACE%
 :DO_JPEG
+@REM https://github.com/mozilla/mozjpeg - git@github.com:mozilla/mozjpeg.git
 @set _TMP_LIBS=%_TMP_LIBS% JPEG
 @echo %0: ############################# Download ^& compile LIBJPEG %BLDLOG%
 IF %HAVELOG% EQU 1 (
 @echo %0: ############################# Download ^& compile LIBJPEG to %LOGFIL%
 )
 
-@set TMP_URL=http://www.ijg.org/files/jpegsr9a.zip
-@set TMP_ZIP=libjpeg.zip
+@set TMP_REPO=git@github.com:mozilla/mozjpeg.git
 @set TMP_SRC=libjpeg-source
-@set TMP_DIR=jpeg-9a
+@set TMP_BLD=libjpeg-build
+@set TMP_OPT=-DWITH_SIMD:BOOL=FALSE
+@set TMP_INS=%WORKSPACE%\libjpeg-build\build
 
-@REM ### setup a perl script
-@if EXIST %PERL_FIL% goto DN_PFIL
-@echo Creating %PERL_FIL%...
-@echo #!/usr/bin/perl -w >%PERL_FIL%
-@echo # rep32w64.pl >>%PERL_FIL%
-@echo. >>%PERL_FIL%
-@echo if (@ARGV) { >>%PERL_FIL%
-@echo   my $file = $ARGV[0]; >>%PERL_FIL%
-@echo   if (open(INF,"<$file")) { >>%PERL_FIL%
-@echo     my @lines = ^<INF^>; >>%PERL_FIL%
-@echo     close INF; >>%PERL_FIL%
-@echo     my ($line,$lncnt,$i); >>%PERL_FIL%
-@echo     $lncnt = scalar @lines; >>%PERL_FIL%
-@echo     for ($i = 0; $i ^< $lncnt; $i++) { >>%PERL_FIL%
-@echo 	      $line = $lines[$i]; >>%PERL_FIL%
-@echo         $line =~ s/Win32/x64/g; >>%PERL_FIL%
-@if %_MSVS% GTR 10 (
-@echo         $line =~ s/\^<CharacterSet\^>Unicode\^<\^/CharacterSet\^>^/\^<CharacterSet\^>Unicode\^<\^/CharacterSet\^>\n\^<PlatformToolset\^>v%_MSVS%0\^<\^/PlatformToolset\^>^/g; >>%PERL_FIL%
-)
-@echo         $lines[$i] = $line; >>%PERL_FIL%
-@echo     } >>%PERL_FIL%
-@echo     if (open WOF, ">$file") { >>%PERL_FIL%
-@echo 	    print WOF join("",@lines)."\n"; >>%PERL_FIL%
-@echo 	    close WOF; >>%PERL_FIL%
-@echo       exit(0); >>%PERL_FIL%
-@echo     } >>%PERL_FIL%
-@echo   } >>%PERL_FIL%
-@echo } >>%PERL_FIL%
-@echo exit(1); >>%PERL_FIL%
-@echo # eof >>%PERL_FIL%
-:DN_PFIL
-
-@if NOT EXIST %TMP_ZIP% (
-CALL %GET_EXE% %TMP_URL% %GET_OPT% %TMP_ZIP%
-)
-
-@if NOT EXIST %TMP_ZIP% (
-@set /A HAD_ERROR+=1
-@echo %HAD_ERROR%: Failed to FETCH from %TMP_URL% to %TMP_ZIP%
-@echo %HAD_ERROR%: Failed to FETCH from %TMP_URL% to %TMP_ZIP% >> %ERRLOG%
-@goto DN_JPEG
+@if NOT EXIST %TMP_SRC%\nul (
+@call git clone %TMP_REPO% %TMP_SRC%
 )
 
 @if NOT EXIST %TMP_SRC%\nul (
-@if NOT EXIST %TMP_DIR%\nul (
-CALL %UZ_EXE% %UZ_OPT% %TMP_ZIP%
+@set /A HAD_ERROR+=1
+@echo %HAD_ERROR%: Failed to CLONE from %TMP_REPO% to %TMP_SRV%
+@echo %HAD_ERROR%: Failed to CLONE from %TMP_REPO% to %TMP_SRV% >> %ERRLOG%
+@goto DN_JPEG
 )
-CALL :SLEEP1
-REN %TMP_DIR% %TMP_SRC%
+
+@if NOT EXIST %TMP_BLD%\nul @(mkdir %TMP_BLD%)
+ 
+@if NOT EXIST %TMP_BLD%\nul (
+@set /A HAD_ERROR+=1
+@echo %HAD_ERROR%: Failed to setup %TMP_BLD%!
+@echo %HAD_ERROR%: Failed to setup %TMP_BLD%! >> %ERRLOG%
+@goto DN_JPEG
+)
+
+@CD %TMP_BLD%
+
+ECHO Doing: 'cmake ..\%TMP_SRC% -G "%GENERATOR%" %TMP_OPT% -DCMAKE_INSTALL_PREFIX:PATH=%TMP_INS% %BLDLOG%
+IF %HAVELOG% EQU 1 (
+ECHO Doing: 'cmake ..\%TMP_SRC% -G "%GENERATOR%" %TMP_OPT% -DCMAKE_INSTALL_PREFIX:PATH=%TMP_INS%
+)
+cmake ..\%TMP_SRC% -G "%GENERATOR%" %TMP_OPT% -DCMAKE_INSTALL_PREFIX:PATH=%TMP_INS% %BLDLOG%
+@if ERRORLEVEL 1 (
+@set /A HAD_ERROR+=1
+@echo %HAD_ERROR%: Error exit config/gen %TMP_SRC%
+@echo %HAD_ERROR%: Error exit config/gen %TMP_SRC% >> %ERRLOG%
+)
+
+ECHO Doing 'cmake --build . --config Release --target INSTALL' %BLDLOG%
+IF %HAVELOG% EQU 1 (
+ECHO Doing 'cmake --build . --config Release --target INSTALL'
+)
+cmake --build . --config Release --target INSTALL >> %ERRLOG% 2>&1
+@if ERRORLEVEL 1 (
+@set /A HAD_ERROR+=1
+@echo %HAD_ERROR%: Error exit building source %TMP_SRC%
+@echo %HAD_ERROR%: Error exit building source %TMP_SRC% >> %ERRLOG%
 )
  
-@if NOT EXIST %TMP_SRC%\nul (
-@set /A HAD_ERROR+=1
-@echo %HAD_ERROR%: Failed to setup %TMP_SRC%!
-@echo %HAD_ERROR%: Failed to setup %TMP_SRC%! >> %ERRLOG%
-@goto DN_JPEG
-)
+xcopy %WORKSPACE%\libjpeg-build\build\include\* %WORKSPACE%\%TMP3RD%\include /y /s /q
+xcopy %WORKSPACE%\libjpeg-build\build\lib\*.lib %WORKSPACE%\%TMP3RD%\lib /y /q
+xcopy %WORKSPACE%\libjpeg-build\build\bin\*.dll %WORKSPACE%\%TMP3RD%\bin /y /q
 
-CD %TMP_SRC%
-
-@IF NOT EXIST jconfig.h (
-@echo Doing 'nmake -f makefile.vc setup-v10'
-nmake -f makefile.vc setup-v10
-@if ERRORLEVEL 1 (
-@set /A HAD_ERROR+=1
-@echo %HAD_ERROR%: Error exit makefile.vc %TMP_SRC%
-@echo %HAD_ERROR%: Error exit makefile.vc %TMP_SRC% >> %ERRLOG%
+@if EXIST %WORKSPACE%\%TMP3RD%\include\jpeglib.h (
+@set _TMP_LIBS=%_TMP_LIBS% JPEG
 )
-)
-@REM sed -i "s/Win32/x64/g" jpeg.sln
-@REM sed -i "s/Win32/x64/g" jpeg.vcxproj
-perl -f %PERL_FIL% jpeg.sln
-perl -f %PERL_FIL% jpeg.vcxproj
-@set _TMP_BLD=jpeg.sln /t:Build /p:Configuration=Release;Platform=x64
-@if %_MSVS% GTR 10 (
-@set _TMP_BLD=jpeg.vcxproj /t:Build /p:Configuration=Release;Platform=x64
-)
-@echo Doing 'msbuild %_TMP_BLD%' to %LOGFIL%
-msbuild %_TMP_BLD% %BLDLOG%
-@if ERRORLEVEL 1 (
-@set /A HAD_ERROR+=1
-@echo %HAD_ERROR%: Error exit msbuild source %TMP_SRC%
-@echo %HAD_ERROR%: Error exit msbuild source %TMP_SRC% >> %ERRLOG%
-)
-
-@echo Installing the jpeg built components...
-xcopy %WORKSPACE%\libjpeg-source\x64\Release\jpeg.lib %WORKSPACE%\%TMP3RD%\lib /y /s /q
-xcopy %WORKSPACE%\libjpeg-source\jconfig.h %WORKSPACE%\%TMP3RD%\include /y /s /q
-xcopy %WORKSPACE%\libjpeg-source\jerror.h %WORKSPACE%\%TMP3RD%\include /y /s /q
-xcopy %WORKSPACE%\libjpeg-source\jmorecfg.h %WORKSPACE%\%TMP3RD%\include /y /s /q
-xcopy %WORKSPACE%\libjpeg-source\jpeglib.h %WORKSPACE%\%TMP3RD%\include /y /s /q
 
 :DN_JPEG
 cd %WORKSPACE%
@@ -488,8 +469,11 @@ MD %TMP_BLD%
 )
 
 CD %TMP_BLD%
-@set _TMPOPTS=-DCURL_STATICLIB:BOOL=ON -G "%GENERATOR%" -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\libcurl-build\build" -DCMAKE_PREFIX_PATH:PATH="%WORKSPACE%\%TMP3RD%"
-@if EXIST CMakeCache.txt @del CMakeCache.txt
+@REM This option causes problems with simgear linkage -- wants the __imp_xxx version
+@REM -DCURL_STATICLIB:BOOL=ON
+@set _TMPOPTS=-G "%GENERATOR%" -DCMAKE_INSTALL_PREFIX:PATH=%WORKSPACE%\libcurl-build\build -DCMAKE_PREFIX_PATH:PATH=%WORKSPACE%\%TMP3RD%
+@REM Reduce load - not not delete cmake cache
+@REM if EXIST CMakeCache.txt @del CMakeCache.txt
 ECHO Doing: 'cmake ..\%TMP_SRC% %_TMPOPTS%' %BLDLOG%
 IF %HAVELOG% EQU 1 (
 ECHO Doing: 'cmake ..\%TMP_SRC% %_TMPOPTS%' to %LOGFIL%
@@ -526,16 +510,26 @@ cd %WORKSPACE%
 
 :DO_GDAL 
 @if %ADD_GDAL% EQU 0 goto DN_GDAL
- 
+
 @echo %0: ############################# Download ^& compile GDAL %CD% %BLDLOG%
 IF %HAVELOG% EQU 1 (
 @echo %0: ############################# Download ^& compile GDAL %CD% to %LOGFIL%
 )
+@REM # NOTE: update the version and checksum for new GDAL release
+@set  GDAL_VERSION_STR=2.3.0
+@set  GDAL_VERSION_PKG=230
+@set  GDAL_VERSION_LIB=203
+@set  GDAL_PACKAGE_SUM=f3f790b7ecb28916d6d0628b15ddc6b396a25a8f1f374589ea5e95b5a50addc99e05e363113f907b6c96faa69870b5dc9fdf3d771f9c8937b4aa8819bd78b190
+
+@REM http://download.osgeo.org/gdal/2.3.1/
 @REM set TMP_URL=https://svn.osgeo.org/gdal/trunk/gdal
 @REM This SVN source FAILED to link with CGAL
 @set TMP_SRC=libgdal-source
-@set TMP_URL=http://download.osgeo.org/gdal/2.0.0/gdal200.zip
-@set TMP_DIR=gdal-2.0.0
+@set TMP_URL=http://download.osgeo.org/gdal/%GDAL_VERSION_STR%/gdal%GDAL_VERSION_PKG%.zip
+@REM set TMP_URL=http://download.osgeo.org/gdal/2.0.0/gdal200.zip
+@rem set TMP_URL=http://download.osgeo.org/gdal/2.3.1/gdal231.zip
+@set TMP_DIR=gdal-%GDAL_VERSION_STR%
+@REM set TMP_DIR=gdal-2.0.0
 @REM set TMP_URL=http://download.osgeo.org/gdal/2.1.0/gdal210.zip
 @REM set TMP_URL=http://download.osgeo.org/gdal/1.11.0/gdal1110.zip
 @set TMP_ZIP=libgdal.zip
@@ -604,7 +598,8 @@ xcopy %WORKSPACE%\libgdal-source\ogr\ogr*.h %WORKSPACE%\%TMP3RD%\include\ /y /f
 xcopy %WORKSPACE%\libgdal-source\ogr\ogrsf_frmts\ogrsf_frmts.h %WORKSPACE%\%TMP3RD%\include\ /y /f
 xcopy %WORKSPACE%\libgdal-source\port\cpl*.h %WORKSPACE%\%TMP3RD%\include\ /y /f
 xcopy %WORKSPACE%\libgdal-source\gdal_i.lib %WORKSPACE%\%TMP3RD%\lib\ /y /f
-xcopy %WORKSPACE%\libgdal-source\gdal.lib %WORKSPACE%\%TMP3RD%\lib\ /y /f
+@REM seem not built
+@REM xcopy %WORKSPACE%\libgdal-source\gdal.lib %WORKSPACE%\%TMP3RD%\lib\ /y /f
 xcopy %WORKSPACE%\libgdal-source\gdal*.dll %WORKSPACE%\%TMP3RD%\bin\ /y /f
 
 @set _TMP_LIBS=%_TMP_LIBS% GDAL
@@ -613,7 +608,10 @@ xcopy %WORKSPACE%\libgdal-source\gdal*.dll %WORKSPACE%\%TMP3RD%\bin\ /y /f
 cd %WORKSPACE%
 @REM TEST EXIT
 @REM GOTO END
+@REM goto ISERR
+
 :DO_FLTK
+@REM http://fltk.org/pub/fltk/
 @set _TMP_LIBS=%_TMP_LIBS% FLTK
 @echo %0: ############################# Download ^& compile LIBFLTK %BLDLOG%
 IF %HAVELOG% EQU 1 (
@@ -625,6 +623,7 @@ IF %HAVELOG% EQU 1 (
 @set TMP_SRC=libfltk-source
 @set TMP_BLD=libfltk-build
 @set TMP_DIR=fltk-1.3.2
+@set TMP_OPT=-DOPTION_BUILD_EXAMPLES:BOOL=OFF
 
 @if NOT EXIST %TMP_TAR% (
 @if NOT EXIST %TMP_ZIP% (
@@ -662,11 +661,11 @@ md %TMP_BLD%
 )
 
 cd %TMP_BLD%
-ECHO Doing: 'cmake ..\%TMP_SRC% -G "%GENERATOR%" -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\libfltk-build\build" -DCMAKE_PREFIX_PATH:PATH="%WORKSPACE%\%TMP3RD%"' %BLDLOG%
+ECHO Doing: 'cmake ..\%TMP_SRC% -G "%GENERATOR%" %TMP_OPT% -DCMAKE_INSTALL_PREFIX:PATH=%WORKSPACE%\libfltk-build\build -DCMAKE_PREFIX_PATH:PATH=%WORKSPACE%\%TMP3RD%' %BLDLOG%
 IF %HAVELOG% EQU 1 (
-ECHO Doing: 'cmake ..\%TMP_SRC% -G "%GENERATOR%" -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\libfltk-build\build" -DCMAKE_PREFIX_PATH:PATH="%WORKSPACE%\%TMP3RD%"' to %LOGFIL%
+ECHO Doing: 'cmake ..\%TMP_SRC% -G "%GENERATOR%" %TMP_OPT% -DCMAKE_INSTALL_PREFIX:PATH=%WORKSPACE%\libfltk-build\build -DCMAKE_PREFIX_PATH:PATH=%WORKSPACE%\%TMP3RD%' to %LOGFIL%
 )
-cmake ..\%TMP_SRC% -G "%GENERATOR%" -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\libfltk-build\build" -DCMAKE_PREFIX_PATH:PATH="%WORKSPACE%\%TMP3RD%" %BLDLOG%
+cmake ..\%TMP_SRC% -G "%GENERATOR%" %TMP_OPT% -DCMAKE_INSTALL_PREFIX:PATH=%WORKSPACE%\libfltk-build\build -DCMAKE_PREFIX_PATH:PATH=%WORKSPACE%\%TMP3RD% %BLDLOG%
 @if ERRORLEVEL 1 (
 @set /A HAD_ERROR+=1
 @echo %HAD_ERROR%: Error exit cmake conf/gen %TMP_SRC%
@@ -692,9 +691,10 @@ xcopy %WORKSPACE%\libfltk-build\build\lib\fltk*.lib %WORKSPACE%\%TMP3RD%\lib /y 
 
 :DN_FLTK
 cd %WORKSPACE%
+@REM goto END
 
 :DO_BOOST
-@if NOT EXIST _setupBoost.x64.bat goto NOBOOST
+@REM if NOT EXIST _setupBoost.x64.bat goto NOBOOST
 
 @echo %0: ############################# Download ^& compile LIBBOOST %BLDLOG%
 IF %HAVELOG% EQU 1 (
@@ -790,8 +790,8 @@ CD %TMP_BLD%
 @REM del CMakeCache.txt >nul
 )
 
-@REM -DZLIB_LIBRARY="%WORKSPACE%\%TMP3RD%\lib\zlib.lib" -DZLIB_INCLUDE_DIR="%WORKSPACE%\%TMP3RD%\include" 
-@set TMP_OPS=-G "%GENERATOR%" -DCMAKE_PREFIX_PATH="%TMP_PRE%" -DCGAL_Boost_USE_STATIC_LIBS:BOOL=ON -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\libcgal-build\build"
+@REM -DZLIB_LIBRARY=%WORKSPACE%\%TMP3RD%\lib\zlib.lib -DZLIB_INCLUDE_DIR=%WORKSPACE%\%TMP3RD%\include 
+@set TMP_OPS=-G "%GENERATOR%" -DCMAKE_PREFIX_PATH=%TMP_PRE% -DCGAL_Boost_USE_STATIC_LIBS:BOOL=ON -DCMAKE_INSTALL_PREFIX:PATH=%WORKSPACE%\libcgal-build\build
 
 @ECHO Doing: 'cmake ..\%TMP_SRC% %TMP_OPS% %BLDLOG%
 IF %HAVELOG% EQU 1 (
@@ -892,11 +892,11 @@ MD %TMP_BLD%
 )
 
 CD %TMP_BLD%
-ECHO Doing: 'cmake ..\%TMP_SRC% -G "%GENERATOR%" -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%/freetype-build/build" -DCMAKE_PREFIX_PATH:PATH="%WORKSPACE%/%TMP3RD%"' %BLDLOG%
+ECHO Doing: 'cmake ..\%TMP_SRC% -G "%GENERATOR%" -DCMAKE_INSTALL_PREFIX:PATH=%WORKSPACE%/freetype-build/build -DCMAKE_PREFIX_PATH:PATH=%WORKSPACE%/%TMP3RD%' %BLDLOG%
 IF %HAVELOG% EQU 1 (
-ECHO Doing: 'cmake ..\%TMP_SRC% -G "%GENERATOR%" -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%/freetype-build/build" -DCMAKE_PREFIX_PATH:PATH="%WORKSPACE%/%TMP3RD%"' to %LOGFIL%
+ECHO Doing: 'cmake ..\%TMP_SRC% -G "%GENERATOR%" -DCMAKE_INSTALL_PREFIX:PATH=%WORKSPACE%/freetype-build/build -DCMAKE_PREFIX_PATH:PATH=%WORKSPACE%/%TMP3RD%' to %LOGFIL%
 ) 
-cmake ..\%TMP_SRC% -G "%GENERATOR%" -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%/freetype-build/build" -DCMAKE_PREFIX_PATH:PATH="%WORKSPACE%/%TMP3RD%"
+cmake ..\%TMP_SRC% -G "%GENERATOR%" -DCMAKE_INSTALL_PREFIX:PATH=%WORKSPACE%/freetype-build/build -DCMAKE_PREFIX_PATH:PATH=%WORKSPACE%/%TMP3RD%
 @if ERRORLEVEL 1 (
 @set /A HAD_ERROR+=1
 @echo %HAD_ERROR%: Error exit cmake conf/gen %TMP_SRC%
@@ -982,61 +982,50 @@ cd %WORKSPACE%
  
 :DO_GEOS 
 @call :SET_BOOST
-  
+@REM http://download.osgeo.org/geos/
 @echo %0: ############################# Download ^& compile LIBGEOS %BLDLOG%
 IF %HAVELOG% EQU 1 (
 @echo %0: ############################# Download ^& compile LIBGEOS to %LOGFIL%
 )
-@set TMP_URL=http://download.osgeo.org/geos/geos-3.4.2.tar.bz2
-@set TMP_ZIP=libgeos.tar.bz2
-@set TMP_TAR=libgeos.tar
+
+@REM 20180711 - switch to github repo - https://github.com/libgeos/geos - git@github.com:libgeos/geos.git
+@set TMP_REPO=git@github.com:libgeos/geos.git
 @set TMP_SRC=libgeos-source
 @set TMP_BLD=libgeos-build
-@set TMP_DIR=geos-3.4.2
 
-@if NOT EXIST %TMP_TAR% (
-@if NOT EXIST %TMP_ZIP% (
-CALL %GET_EXE% %TMP_URL% %GET_OPT% %TMP_ZIP%
-)
-CALL %UZ_EXE% %UZ_OPT% %TMP_ZIP%
-)
-
-@if NOT EXIST %TMP_ZIP% (
-@set /A HAD_WARN+=1 
-@echo %HAD_ERROR%: Failed download from %TMP_URL% to %TMP_ZIP%
-@echo %HAD_ERROR%: Failed download from %TMP_URL% to %TMP_ZIP% >> %ERRLOG%
-@goto DN_GEOS
-)
+@REM set TMP_URL=http://download.osgeo.org/geos/geos-3.6.2.tar.bz2
+@REm set TMP_URL=http://download.osgeo.org/geos/geos-3.4.2.tar.bz2
+@REM set TMP_ZIP=libgeos.tar.bz2
+@REM set TMP_TAR=libgeos.tar
+@REM set TMP_SRC=libgeos-source
+@REM set TMP_BLD=libgeos-build
+@REM set TMP_DIR=geos-3.6.2
+@set TMP_OPT=-DGEOS_MSVC_ENABLE_MP:BOOL=OFF -DGEOS_ENABLE_TESTS:BOOL=OFF
 
 @if NOT EXIST %TMP_SRC%\nul (
-@if NOT EXIST %TMP_TAR% (
-CALL %UZ_EXE% %UZ_OPT% %TMP_ZIP%
+@echo Cloning %TMP_REPO%, to %TMP_SRC%
+@call git clone %TMP_REPO% %TMP_SRC%
 )
-CALL %UZ_EXE% %UZ_OPT% %TMP_TAR%
-CALL :SLEEP1
-REN %TMP_DIR% %TMP_SRC%
-)
-
-@if NOT EXIST %TMP_SRC%\nul (
-@set /A HAD_WARN+=1
-@echo %HAD_ERROR%: Failed to set up %TMP_SRC%
-@echo %HAD_ERROR%: Failed to set up %TMP_SRC% >> %ERRLOG%
+if NOT EXIST %TMP_SRC%\nul (
+@set /A HAD_ERROR+=1 
+@echo %HAD_ERROR%: Failed clone from %TMP_REPO% to %TMP_SRC%
+@echo %HAD_ERROR%: Failed clone from %TMP_REPO% to %TMP_SRC% >> %ERRLOG%
 @goto DN_GEOS
 )
 
 cd %WORKSPACE%
 @if NOT EXIST %TMP_BLD%\nul (
-md %TMP_BLD%
+@md %TMP_BLD%
 )
 
 cd %TMP_BLD%
-@echo Doing: 'cmake ..\%TMP_SRC% -G "%GENERATOR%" -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\libgeos-build\build"' %BLDLOG%
+@echo Doing: 'cmake ..\%TMP_SRC% -G "%GENERATOR%" %TMP_OPT% -DCMAKE_INSTALL_PREFIX:PATH=%WORKSPACE%\libgeos-build\build' %BLDLOG%
 IF %HAVELOG% EQU 1 (
-@echo Doing: 'cmake ..\%TMP_SRC% -G "%GENERATOR%" -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\libgeos-build\build"' to %LOGFIL%
+@echo Doing: 'cmake ..\%TMP_SRC% -G "%GENERATOR%" %TMP_OPT% -DCMAKE_INSTALL_PREFIX:PATH=%WORKSPACE%\libgeos-build\build' to %LOGFIL%
 )
-cmake ..\%TMP_SRC% -G "%GENERATOR%" -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\libgeos-build\build" %BLDLOG%
+cmake ..\%TMP_SRC% -G "%GENERATOR%" %TMP_OPT% -DCMAKE_INSTALL_PREFIX:PATH=%WORKSPACE%\libgeos-build\build %BLDLOG%
 @if ERRORLEVEL 1 (
-@set /A HAD_WARN+=1
+@set /A HAD_ERROR+=1
 @echo %HAD_ERROR%: Error exit cmake conf/gen %TMP_SRC%
 @echo %HAD_ERROR%: Error exit cmake conf/gen %TMP_SRC% >> %ERRLOG%
 @goto DN_GEOS
@@ -1048,7 +1037,7 @@ IF %HAVELOG% EQU 1 (
 )
 cmake --build . --config Release --target INSTALL %BLDLOG%
 @if ERRORLEVEL 1 (
-@set /A HAD_WARN+=1
+@set /A HAD_ERROR+=1
 @echo %HAD_ERROR%: Error exit building source %TMP_SRC%
 @echo %HAD_ERROR%: Error exit building source %TMP_SRC% >> %ERRLOG%
 @goto DN_GEOS
@@ -1056,13 +1045,15 @@ cmake --build . --config Release --target INSTALL %BLDLOG%
 
 cd %WORKSPACE%
  
-xcopy %WORKSPACE%\libgeos-build\build\bin\geos_c.dll %WORKSPACE%\%TMP3RD%\bin /s /y /q
-xcopy %WORKSPACE%\libgeos-build\build\lib\geos_c.lib %WORKSPACE%\%TMP3RD%\lib /s /y /q
-xcopy %WORKSPACE%\libgeos-build\build\include\geos_c.h %WORKSPACE%\%TMP3RD%\include /s /y /q
+xcopy %WORKSPACE%\libgeos-build\build\bin\*.dll %WORKSPACE%\%TMP3RD%\bin /s /y /q
+xcopy %WORKSPACE%\libgeos-build\build\lib\*.lib %WORKSPACE%\%TMP3RD%\lib /s /y /q
+xcopy %WORKSPACE%\libgeos-build\build\include\* %WORKSPACE%\%TMP3RD%\include /s /y /q
+
 @set _TMP_LIBS=%_TMP_LIBS% GEOS
 
 :DN_GEOS
 cd %WORKSPACE%
+@REM goto ISERR
 
 :DO_EXPAT
 @set _TMP_LIBS=%_TMP_LIBS% EXPAT
@@ -1115,11 +1106,11 @@ md %TMP_BLD%
 )
 
 cd %TMP_BLD%
-@echo Doing: 'cmake ..\%TMP_SRC% -G "%GENERATOR%" -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\libexpat-build\build"' %BLDLOG%
+@echo Doing: 'cmake ..\%TMP_SRC% -G "%GENERATOR%" -DCMAKE_INSTALL_PREFIX:PATH=%WORKSPACE%\libexpat-build\build' %BLDLOG%
 IF %HAVELOG% EQU 1 (
-@echo Doing: 'cmake ..\%TMP_SRC% -G "%GENERATOR%" -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\libexpat-build\build"' to %LOGFIL%
+@echo Doing: 'cmake ..\%TMP_SRC% -G "%GENERATOR%" -DCMAKE_INSTALL_PREFIX:PATH=%WORKSPACE%\libexpat-build\build' to %LOGFIL%
 )
-cmake ..\%TMP_SRC% -G "%GENERATOR%" -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\libexpat-build\build" %BLDLOG%
+cmake ..\%TMP_SRC% -G "%GENERATOR%" -DCMAKE_INSTALL_PREFIX:PATH=%WORKSPACE%\libexpat-build\build %BLDLOG%
 @if ERRORLEVEL 1 (
 @set /A HAD_ERROR+=1
 @echo %HAD_ERROR%: Error exit cmake conf/gen %TMP_SRC%
@@ -1185,11 +1176,11 @@ md %TMP_BLD%
 
 CD %TMP_BLD%
 
-ECHO Doing: 'cmake ..\%TMP_SRC% -G "%GENERATOR%" -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\plib-build\build" %BLDLOG%
+ECHO Doing: 'cmake ..\%TMP_SRC% -G "%GENERATOR%" -DCMAKE_INSTALL_PREFIX:PATH=%WORKSPACE%\plib-build\build %BLDLOG%
 IF %HAVELOG% EQU 1 (
-ECHO Doing: 'cmake ..\%TMP_SRC% -G "%GENERATOR%" -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\plib-build\build"
+ECHO Doing: 'cmake ..\%TMP_SRC% -G "%GENERATOR%" -DCMAKE_INSTALL_PREFIX:PATH=%WORKSPACE%\plib-build\build
 )
-cmake ..\%TMP_SRC% -G "%GENERATOR%" -DCMAKE_INSTALL_PREFIX:PATH="%WORKSPACE%\plib-build\build" %BLDLOG%
+cmake ..\%TMP_SRC% -G "%GENERATOR%" -DCMAKE_INSTALL_PREFIX:PATH=%WORKSPACE%\plib-build\build %BLDLOG%
 @if ERRORLEVEL 1 (
 @set /A HAD_ERROR+=1
 @echo %HAD_ERROR%: Error exit config/gen %TMP_SRC%
@@ -1231,7 +1222,7 @@ cd %WORKSPACE%
 @REM Avoid re-doing OpenAL if it already appears installed
 @if EXIST %_TMP_ALI% goto GOT_AL
 @set _TMP_ALB=openal-build.x64.bat
-@if EXIST %_TMP_ALB% (
+@rem if EXIST %_TMP_ALB% (
     @echo Doing an OpenAL build and install...
     @call %_TMP_ALB%
     @if ERRORLEVEL 1 (
@@ -1240,10 +1231,10 @@ cd %WORKSPACE%
         @goto ISERR
     )
     @set _TMP_LIBS=%_TMP_LIBS% OpenAL
-) else (
-    @echo %_TMP_ALB% NOT FOUND in %CD%! ** FIX ME **
-    @goto ISERR
-)
+@rem ) else (
+@rem    @echo %_TMP_ALB% NOT FOUND in %CD%! ** FIX ME **
+@rem    @goto ISERR
+@rem )
 @goto DN_AL
 :GOT_AL
 @echo Found %_TMP_ALI%... done AL
