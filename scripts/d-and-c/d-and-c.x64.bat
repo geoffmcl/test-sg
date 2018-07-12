@@ -17,7 +17,7 @@
 @set HAD_ERROR=0
 set  error=0
 @set PWD=%CD%
-@set "WORKSPACE=%CD%"
+@set WORKSPACE=%CD%
 @set INSTALL_DIR=%PWD%\install
 @REM set FG_ROOT=x:\fgdata
 @set FG_ROOT=%INSTALL_DIR%\fgdata
@@ -175,10 +175,10 @@ set "SG_REPO=git://git.code.sf.net/p/flightgear/simgear"
 set "FGRUN_REPO=git://git.code.sf.net/p/flightgear/fgrun"
 set "FGDATA_REPO=git://git.code.sf.net/p/flightgear/fgdata"
 @REM set "FGDATA_REPO=git://mapserver.flightgear.org/fgdata"
-set "FGSG_BRANCH=next"
-set "FGDATA_BRANCH=master"
-set "TG_BRANCH=scenery/ws2.0"
-set "TGGUI_BRANCH=master"
+set FGSG_BRANCH=next
+set FGDATA_BRANCH=next
+set TG_BRANCH=next
+set TGGUI_BRANCH=master
 
 REM #########################       GOTO HELP       ######################################
 IF "%1"=="--help" GOTO Usage
@@ -724,10 +724,11 @@ cd flightgear
 @REM set PATH=%DXSDK_DIR%Lib\x64;%PATH%
 @REM echo Add extra LIB PATH '%DXSDK_DIR%Lib\x64'
 @REM :DN_DXSDK
+@REM 20180712 - Maybe this is WRONG -DMSVC_3RDPARTY_ROOT="%RDPARTY_INSTALL_DIR%" - try just ROOT - ok
 @set TMPOPTS=-G "%GENERATOR%" -DWITH_FGPANEL=OFF -DCMAKE_EXE_LINKER_FLAGS="/SAFESEH:NO" ^
--DMSVC_3RDPARTY_ROOT="%RDPARTY_INSTALL_DIR%" -DBOOST_ROOT="%BOOST_INSTALL_DIR%" ^
--DCMAKE_PREFIX_PATH="%BOOST_INSTALL_DIR%;%OSG_INSTALL_DIR%;%SIMGEAR_INSTALL_DIR%;%RDPARTY_INSTALL_DIR%" ^
--DCMAKE_INSTALL_PREFIX:PATH="%FLIGHTGEAR_INSTALL_DIR%"
+-DMSVC_3RDPARTY_ROOT=%WORKSPACE% -DBOOST_ROOT=%BOOST_INSTALL_DIR% ^
+-DCMAKE_PREFIX_PATH=%BOOST_INSTALL_DIR%;%OSG_INSTALL_DIR%;%SIMGEAR_INSTALL_DIR%;%RDPARTY_INSTALL_DIR% ^
+-DCMAKE_INSTALL_PREFIX:PATH=%FLIGHTGEAR_INSTALL_DIR%
 IF %CMAKE% EQU 1 (
     @IF %HAVELOG% EQU 1 (
         @ECHO Doing: 'CALL "%CMAKE_EXE%" ..\..\flightgear %TMPOPTS%' output to %LOGFIL% 
