@@ -1003,6 +1003,8 @@ IF %BUILD_ALL% EQU 0 (
 echo ##############################
 echo ########     FGRUN    ########
 echo ##############################
+@REM Build options
+@set TMP_FGRUN_COPTS=-DENABLE_NLS:BOOL=OFF
 
 IF exist "%PWD%"\fgrun (
 	CALL :_gitUpdate fgrun
@@ -1016,25 +1018,48 @@ IF NOT exist fgrun (mkdir fgrun)
 cd fgrun
 IF %CMAKE% EQU 1 (
 	DEL CMakeCache.txt 2>nul
-	CALL "%CMAKE_EXE%" ..\..\fgrun ^
+    @IF %HAVELOG% EQU 1 (
+        @echo Doing 'CALL "%CMAKE_EXE%" ..\..\fgrun -G "%GENERATOR%" %TMP_FGRUN_COPTS% -DCMAKE_EXE_LINKER_FLAGS="/SAFESEH:NO" -DMSVC_3RDPARTY_ROOT="%RDPARTY_INSTALL_DIR%" -DBOOST_ROOT="%BOOST_INSTALL_DIR%" -DCMAKE_PREFIX_PATH="%BOOST_INSTALL_DIR%;%OSG_INSTALL_DIR%;%SIMGEAR_INSTALL_DIR%;%RDPARTY_INSTALL_DIR%" -DCMAKE_INSTALL_PREFIX:PATH="%FGRUN_INSTALL_DIR%"' to %LOGFIL%
+    )
+     @echo Doing 'CALL "%CMAKE_EXE%" ..\..\fgrun -G "%GENERATOR%" %TMP_FGRUN_COPTS% -DCMAKE_EXE_LINKER_FLAGS="/SAFESEH:NO" -DMSVC_3RDPARTY_ROOT="%RDPARTY_INSTALL_DIR%" -DBOOST_ROOT="%BOOST_INSTALL_DIR%" -DCMAKE_PREFIX_PATH="%BOOST_INSTALL_DIR%;%OSG_INSTALL_DIR%;%SIMGEAR_INSTALL_DIR%;%RDPARTY_INSTALL_DIR%" -DCMAKE_INSTALL_PREFIX:PATH="%FGRUN_INSTALL_DIR%"' %BLDLOG%
+     @CALL "%CMAKE_EXE%" ..\..\fgrun ^
 		-G "%GENERATOR%" ^
-		-DCMAKE_BUILD_TYPE="Release" ^
+		%TMP_FGRUN_COPTS% ^
 		-DCMAKE_EXE_LINKER_FLAGS="/SAFESEH:NO" ^
 		-DMSVC_3RDPARTY_ROOT="%RDPARTY_INSTALL_DIR%" ^
 		-DBOOST_ROOT="%BOOST_INSTALL_DIR%" ^
 		-DCMAKE_PREFIX_PATH="%BOOST_INSTALL_DIR%;%OSG_INSTALL_DIR%;%SIMGEAR_INSTALL_DIR%;%RDPARTY_INSTALL_DIR%" ^
-		-DCMAKE_INSTALL_PREFIX:PATH="%FGRUN_INSTALL_DIR%"
+		-DCMAKE_INSTALL_PREFIX:PATH="%FGRUN_INSTALL_DIR%" %BLDLOG%
+    @if ERRORLEVEL 1 (
+        @set /A HAD_ERROR+=1
+        @echo 'fgrun cmake config/gen ...' FAILED! %BLDLOG%
+        @goto :DN_FGRUN
+    )
 )
 IF %COMPILE% EQU 1 ( 
-	CALL "%CMAKE_EXE%" --build . --config Release --target INSTALL
+    @IF %HAVELOG% EQU 1 (
+        @echo Doing 'CALL "%CMAKE_EXE%" --build . --config Release --target INSTALL' to %LOGFIL%
+    )
+    @echo Doing 'CALL "%CMAKE_EXE%" --build . --config Release --target INSTALL' %BLDLOG%
+	@CALL "%CMAKE_EXE%" --build . --config Release --target INSTALL %BLDLOG%
+    @if ERRORLEVEL 1 (
+        @set /A HAD_ERROR+=1
+        @echo 'fgrun build...' FAILED! %BLDLOG%
+        @goto :DN_FGRUN
+    )
 )
 cd %PWD%
+
 xcopy "%OSG_INSTALL_DIR%"\bin\*.dll "%FGRUN_INSTALL_DIR%"\bin\* /s /e /i /Y /q
 xcopy "%RDPARTY_INSTALL_DIR%"\bin\libintl-8.dll "%FGRUN_INSTALL_DIR%"\bin\* /s /e /i /Y /q
 
 echo @echo off > run_fgrun.bat
 echo start /d "%FGRUN_INSTALL_DIR%\bin" fgrun.exe >> run_fgrun.bat
 echo Done...
+
+:DN_FGRUN
+
+cd %PWD%
 
 IF %BUILD_ALL% EQU 0 (
     SHIFT
