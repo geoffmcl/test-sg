@@ -20,7 +20,7 @@ set  error=0
 @set WORKSPACE=%CD%
 @set INSTALL_DIR=%PWD%\install
 @REM set FG_ROOT=x:\fgdata
-@set FG_ROOT=%INSTALL_DIR%\fgdata
+@set FG_ROOT=%INSTALL_DIR%\FlightGear\fgdata
 @REM IF NOT EXIST %FG_ROOT%\version (
 @REM echo Unable to locate %FG_ROOT%\version
 @REM exit /b 1
@@ -969,6 +969,7 @@ ECHO WARNING: No GDAL DLL found in "%RDPARTY_INSTALL_DIR%\bin"!
 echo ##############################
 echo ######  TERRAGEARGUI  ########
 echo ##############################
+@set TMP_TGGUI_COPTS=
 
 IF exist "%PWD%"\terrageargui (
 	CALL :_gitUpdate terrageargui
@@ -982,17 +983,36 @@ IF NOT exist terrageargui (mkdir terrageargui)
 cd terrageargui
 IF %CMAKE% EQU 1 (
 	DEL CMakeCache.txt 2>nul
-	CALL "%CMAKE_EXE%" ..\..\terrageargui ^
-		-G "%GENERATOR%" ^
-		-DCMAKE_BUILD_TYPE="Release" ^
+    @IF %HAVELOG% EQU 1 (
+        @echo Doing 'CALL "%CMAKE_EXE%" ..\..\terrageargui -G "%GENERATOR%" %TMP_TGGUI_COPTS% -DCMAKE_EXE_LINKER_FLAGS="/SAFESEH:NO" -DCMAKE_INSTALL_PREFIX:PATH="%TGGUI_INSTALL_DIR%" to %LOGFIL%
+    )
+    @echo Doing 'CALL "%CMAKE_EXE%" ..\..\terrageargui -G "%GENERATOR%" %TMP_TGGUI_COPTS% -DCMAKE_EXE_LINKER_FLAGS="/SAFESEH:NO" -DCMAKE_INSTALL_PREFIX:PATH="%TGGUI_INSTALL_DIR%" %BLDLOG%
+	@CALL "%CMAKE_EXE%" ..\..\terrageargui ^
+		-G "%GENERATOR%" %TMP_TGGUI_COPTS% ^
 		-DCMAKE_EXE_LINKER_FLAGS="/SAFESEH:NO" ^
-		-DCMAKE_INSTALL_PREFIX:PATH="%TGGUI_INSTALL_DIR%"
+		-DCMAKE_INSTALL_PREFIX:PATH="%TGGUI_INSTALL_DIR%" %BLDLOG%
+    @if ERRORLEVEL 1 (
+        @set /A HAD_ERROR+=1
+        @echo 'terrageargui cmake config/gen ...' FAILED! %BLDLOG%
+        @goto :DN_TGGUI
+    )
 )
 IF %COMPILE% EQU 1 (
-	CALL "%CMAKE_EXE%" --build . --config Release --target INSTALL
+    @IF %HAVELOG% EQU 1 (
+        @echo Doing 'CALL "%CMAKE_EXE%" --build . --config Release --target INSTALL', to %LOGFIL%
+    )
+    @echo Doing 'CALL "%CMAKE_EXE%" --build . --config Release --target INSTALL' %BLDLOG%
+	CALL "%CMAKE_EXE%" --build . --config Release --target INSTALL %BLDLOG%
+    @if ERRORLEVEL 1 (
+        @set /A HAD_ERROR+=1
+        @echo 'terrageargui build ...' FAILED! %BLDLOG%
+        @goto :DN_TGGUI
+    )
 )
 cd "%PWD%"
-echo Done...
+echo Done terrageargui build ok...
+:DN_TGGUI
+cd "%PWD%"
 
 IF %BUILD_ALL% EQU 0 (
     SHIFT
@@ -1097,14 +1117,19 @@ IF %HAVELOG% EQU 1 (
     ECHO "See output in %LOGFIL%" 
 )
 @if %HAD_ERROR% GTR 0 goto HAD_ERRORS
-echo #########  F         #########
-echo #########   I        #########
-echo #########    N       #########
-echo #########     I      #########
-echo #########      S     #########
-echo #########       H    #########
-echo #########        E   #########
-echo #########         D  #########
+@REM FINISHED of d-and-c.x64.bat
+@REM or FG_ROOT
+@if NOT EXIST %FGDATA_INSTALL_DIR%\nul (
+@echo Note: fgdata not done...
+)
+@echo #########  F         #########
+@echo #########   I        #########
+@echo #########    N       #########
+@echo #########     I      #########
+@echo #########      S     #########
+@echo #########       H    #########
+@echo #########        E   #########
+@echo #########         D  #########
 :the_end
 exit /b 0
 
