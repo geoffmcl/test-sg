@@ -2,6 +2,8 @@
 
 Small personal set of SimGear library tests, particularly recently SG_PATH code, in Windows...
 
+Updated 20190920 - some patches to src/metar_main.cxx
+
 ### Prerequisites
 
  - installed SimGear library
@@ -18,6 +20,11 @@ The default build is done using an X: drive for all header, library dependencies
 
  - Set ENV SIMGEAR_DIR=X:\install\msvc100\simgear
  - cmake .. -DCMAKE_INSTALL_PREFIX=X:\3rdParty
+
+or
+
+ - Set ENV SIMGEAR_DIR=X:\install\msvc140-64\simgear
+ - cmake .. -DCMAKE_INSTALL_PREFIX=X:\3rdParty.x64\bin
  
 The outline of this build is more or less per the [FG Wiki](http://wiki.flightgear.org/Building_using_CMake_-_Windows). That whole build is all in this [repo](https://gitlab.com/fgtools/fg-win). While the repo itself is not so large, be aware a total build marches into the 40 plus giga bytes...
 
