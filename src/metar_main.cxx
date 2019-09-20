@@ -28,8 +28,6 @@
 #include <cstdlib>
 #include <cstdio>
 
-#include <boost/algorithm/string.hpp>
-
 #include <simgear/environment/metar.hxx>
 #include <simgear/structure/exception.hxx>
 
@@ -37,12 +35,14 @@
 #include <simgear/io/HTTPMemoryRequest.hxx>
 #include <simgear/io/raw_socket.hxx>
 #include <simgear/timing/timestamp.hxx>
+#include <simgear/misc/strutils.hxx>
+
 
 using namespace std;
 using namespace simgear;
 
 // text color
-#if defined(__linux__) || defined(__sun) || defined(__CYGWIN__) || defined( __FreeBSD__ ) || defined ( sgi )
+#if defined(__linux__) || defined(__sun) || defined(__CYGWIN__) || defined( __FreeBSD__ ) || defined( __OpenBSD__ ) || defined ( sgi )
 #	define R "\033[31;1m"		// red
 #	define G "\033[32;1m"		// green
 #	define Y "\033[33;1m"		// yellow
@@ -539,11 +539,10 @@ int main(int argc, char *argv[])
 			try
 			{
               static const std::string NOAA_BASE_URL =
-                  "http://tgftp.nws.noaa.gov/data/observations/metar/stations/"; // 20170218 was "http://weather.noaa.gov/pub/data/observations/metar/stations/";
+                "https://tgftp.nws.noaa.gov/data/observations/metar/stations/";
                 HTTP::MemoryRequest* mr = new HTTP::MemoryRequest
                 (
-                    NOAA_BASE_URL
-                  + boost::to_upper_copy<std::string>(argv[i]) + ".TXT"
+                    NOAA_BASE_URL + strutils::uppercase(argv[i]) + ".TXT"
                 );
                 HTTP::Request_ptr own(mr);
                 http.makeRequest(mr);
